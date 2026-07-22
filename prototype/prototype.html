@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not a RPG — Playable Prototype</title>
+    <!-- Tailwind CSS for high fidelity prototyping -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #050714;
+            color: #ffffff;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* 9:16 Portrait Mobile Frame */
+        .phone-frame {
+            width: 390px;
+            height: 844px;
+            background: radial-gradient(circle at top, #141b43 0%, #080a1c 100%);
+            border: 8px solid #222538;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Float elements standard */
+        .hud-header {
+            height: 80px;
+            background: linear-gradient(to bottom, rgba(12, 16, 51, 0.9) 0%, rgba(12, 16, 51, 0) 100%);
+            z-index: 50;
+        }
+
+        .active-slots-tray {
+            height: 100px;
+            background: rgba(12, 16, 51, 0.85);
+            backdrop-filter: blur(8px);
+            border-top: 2px solid rgba(255, 215, 0, 0.2);
+            z-index: 40;
+        }
+
+        /* Grid lines overlay */
+        .grid-overlay {
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .grid-cell-highlight {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .grid-cell-highlight.debug-active {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Smooth custom animations */
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .princess-float {
+            animation: float-gentle 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-neon {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        .neon-trail {
+            animation: pulse-neon 2s infinite ease-in-out;
+        }
+
+        /* CSS Coins Spilling HUD */
+        @keyframes coin-hud-collect {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.3); filter: brightness(1.5); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        .coin-collecting {
+            animation: coin-hud-collect 0.4s ease-out;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <!-- Playable Game Container -->
+    <div class="phone-frame flex flex-col justify-between select-none relative">
+        
+        <!-- ==================== HUD HEADER (80px) ==================== -->
+        <div class="hud-header absolute top-0 left-0 w-full flex items-center justify-between px-5 pointer-events-auto">
+            <!-- Left Side: Coins & Lives Pill -->
+            <div class="flex items-center space-x-2">
+                <!-- Coins Pill -->
+                <div class="flex items-center bg-[#1c2656] bg-opacity-80 rounded-full px-3 py-1 border border-yellow-500/30 shadow-md">
+                    <span class="text-yellow-400 mr-1.5 text-base">🪙</span>
+                    <span id="hud-coins" class="text-yellow-200 font-bold text-sm tracking-wide">150</span>
+                </div>
+                <!-- Lives Pill -->
+                <div class="flex items-center bg-[#1c2656] bg-opacity-80 rounded-full px-3 py-1 border border-red-500/30 shadow-md">
+                    <span class="text-red-500 mr-1.5 text-sm">❤️</span>
+                    <span id="hud-lives" class="text-red-200 font-bold text-sm tracking-wide">3</span>
+                </div>
+            </div>
+
+            <!-- Level Indicator Badge -->
+            <div class="flex flex-col items-center">
+                <span class="text-gray-400 text-[10px] uppercase font-semibold tracking-wider">Level</span>
+                <span id="hud-level-num" class="text-white font-bold text-lg leading-none">1</span>
+            </div>
+
+            <!-- Right Side: Settings Toggle & Dev Toggle -->
+            <div class="flex items-center space-x-1.5">
+                <button onclick="toggleDevPanel()" class="bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded border border-purple-400/40 shadow">
+                    DEV
+                </button>
+                <button onclick="openSettings()" class="w-8 h-8 rounded-full bg-[#1c2656] hover:bg-[#2a3777] flex items-center justify-center border border-indigo-400/30 text-white text-lg">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+
+
+        <!-- ==================== GAMEPLAY CANVAS (390x663px) ==================== -->
+        <!-- Floating playfield where assets are rendered -->
+        <div id="gameplay-canvas" class="w-full h-[663px] relative mt-[80px] overflow-hidden pointer-events-auto">
+            
+            <!-- Grid Background Overlay -->
+            <div id="grid-overlay" class="grid-overlay absolute inset-0 grid grid-cols-10 grid-rows-17">
+                <!-- 170 cells will be dynamically injected here for visual/debug references -->
+            </div>
+
+            <!-- SVGs Trails Render Container -->
+            <svg id="trails-svg-container" class="absolute inset-0 w-full h-full pointer-events-none z-10">
+                <!-- Predefined trails as neon glowing stroke paths -->
+            </svg>
+
+            <!-- Gameplay Entities Render Container -->
+            <div id="entities-layer" class="absolute inset-0 w-full h-full pointer-events-none z-20">
+                <!-- Portals, Enemy Camps, Princess, Heroes, Coins, Battle sparkles -->
+            </div>
+
+            <!-- Floating Center Princess Cage -->
+            <div id="princess-container" class="absolute w-[100px] h-[100px] flex flex-col items-center justify-center princess-float z-30 transition-all duration-500" style="left: 145px; top: 220px;">
+                <!-- Locked Cage Graphic -->
+                <div id="princess-cage" class="relative w-16 h-16 bg-[#2d324d] border-2 border-slate-500 rounded-lg flex items-center justify-center shadow-xl">
+                    <!-- Cage Bars -->
+                    <div class="absolute inset-x-2 inset-y-1 border-x border-slate-600 flex justify-around">
+                        <div class="w-0.5 h-full bg-slate-600"></div>
+                        <div class="w-0.5 h-full bg-slate-600"></div>
+                        <div class="w-0.5 h-full bg-slate-600"></div>
+                    </div>
+                    <!-- Princess Sprite Chibi -->
+                    <div class="z-10 text-3xl">👑</div>
+                </div>
+                <!-- Giant Padlock overlay with countdown -->
+                <div id="cage-padlock" class="mt-1 bg-red-600 border border-red-400 text-white font-bold text-xs rounded px-2 py-0.5 flex items-center space-x-1 shadow-md z-30">
+                    <span>🔒</span>
+                    <span id="princess-lock-count">10</span>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ==================== ACTIVE SLOTS TRAY (100px) ==================== -->
+        <div class="active-slots-tray w-full flex items-center justify-around px-2 relative">
+            <!-- 5 active slot pods -->
+            <div class="absolute -top-3 left-0 w-full flex justify-center pointer-events-none">
+                <span class="bg-indigo-900 border border-indigo-500/40 text-[9px] uppercase font-bold tracking-wider text-indigo-300 px-2 py-0.5 rounded-full shadow-md">
+                    Active Deploy Slots
+                </span>
+            </div>
+
+            <!-- Dynamic active slot containers -->
+            <div id="slot-0" class="w-14 h-14 rounded-xl border-2 border-dashed border-indigo-500/30 bg-indigo-950/40 flex items-center justify-center relative shadow-inner"></div>
+            <div id="slot-1" class="w-14 h-14 rounded-xl border-2 border-dashed border-indigo-500/30 bg-indigo-950/40 flex items-center justify-center relative shadow-inner"></div>
+            <div id="slot-2" class="w-14 h-14 rounded-xl border-2 border-dashed border-indigo-500/30 bg-indigo-950/40 flex items-center justify-center relative shadow-inner"></div>
+            <div id="slot-3" class="w-14 h-14 rounded-xl border-2 border-dashed border-indigo-500/30 bg-indigo-950/40 flex items-center justify-center relative shadow-inner"></div>
+            <div id="slot-4" class="w-14 h-14 rounded-xl border-2 border-dashed border-indigo-500/30 bg-indigo-950/40 flex items-center justify-center relative shadow-inner"></div>
+        </div>
+
+
+        <!-- ==================== BOX LANES / SUPPLY QUEUE ==================== -->
+        <!-- Placed at the very bottom, supports multiple customizable lanes -->
+        <div id="box-lanes-container" class="w-full bg-[#090c21] p-3 border-t border-indigo-950 flex flex-col space-y-2 justify-center items-center z-40 min-h-[90px] max-h-[140px] overflow-y-auto">
+            <!-- Dynamic box lanes injected by Level designer -->
+        </div>
+
+    </div>
+
+    <!-- ==================== OVERLAYS & MODALS ==================== -->
+
+    <!-- Fail Screen Modal -->
+    <div id="fail-modal" class="hidden absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-6 pointer-events-auto">
+        <div class="bg-[#151c4a] border-2 border-blue-500/40 rounded-3xl p-6 text-center shadow-2xl max-w-[320px] w-full transform scale-95 transition-all duration-300">
+            <!-- Split 3D Heart Graphic -->
+            <div class="text-6xl mb-4 animate-bounce">💔</div>
+            <h2 class="text-2xl font-bold text-blue-300 mb-2">No Path to Enemies!</h2>
+            <p class="text-xs text-gray-400 mb-6 leading-relaxed">The active deployment slots became fully blocked. Our heroes couldn't find a path to the trolls!</p>
+            
+            <div class="flex flex-col space-y-3">
+                <!-- Green Positive Continue Button (RV Multiply) -->
+                <button onclick="retryLevel()" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-full shadow-lg border-b-4 border-green-700 transition duration-150 active:border-b-0 active:translate-y-1">
+                    💚 Free Revive (RV)
+                </button>
+                <!-- Red Negative CTA Exit -->
+                <button onclick="retryLevel()" class="w-full bg-red-500 hover:bg-red-400 text-white font-bold py-2 rounded-full text-xs shadow-md border-b-4 border-red-700 transition duration-150 active:border-b-0 active:translate-y-1">
+                    Restart Level
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Screen Modal -->
+    <div id="win-modal" class="hidden absolute inset-0 bg-black/75 flex items-center justify-center z-50 p-6 pointer-events-auto">
+        <div class="bg-[#1a255c] border-2 border-yellow-500/50 rounded-3xl p-6 text-center shadow-2xl max-w-[320px] w-full transform scale-95 transition-all duration-300">
+            <!-- Happy Cheers Princess -->
+            <div class="text-6xl mb-4 animate-bounce">👑💖🎉</div>
+            <h2 class="text-2xl font-bold text-yellow-300 mb-1">Princess Saved!</h2>
+            <p class="text-xs text-gray-300 mb-6 leading-relaxed">You successfully cleared the paths, defeated the troll armies, and unlocked the cage!</p>
+            
+            <div class="flex flex-col space-y-3">
+                <!-- Double Rewards CTA -->
+                <button onclick="nextLevel()" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-full shadow-lg border-b-4 border-green-700 transition duration-150 active:border-b-0 active:translate-y-1">
+                    💚 Claim 2x Coins (RV)
+                </button>
+                <button onclick="nextLevel()" class="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 rounded-full text-xs shadow-md border-b-4 border-blue-700 transition duration-150 active:border-b-0 active:translate-y-1">
+                    Next Level
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-screen Settings Overlay -->
+    <div id="settings-modal" class="hidden absolute inset-0 bg-[#090c21]/95 flex flex-col justify-between p-6 z-50 pointer-events-auto">
+        <div class="flex items-center justify-between border-b border-indigo-950 pb-4">
+            <h2 class="text-2xl font-bold text-indigo-300">Settings</h2>
+            <button onclick="closeSettings()" class="w-8 h-8 rounded-full bg-[#1c2656] flex items-center justify-center text-white text-lg font-bold">✕</button>
+        </div>
+        
+        <div class="flex flex-col space-y-4 my-8 flex-grow justify-center">
+            <div class="flex justify-between items-center bg-[#151c4a] p-4 rounded-xl border border-indigo-900">
+                <span class="font-semibold text-gray-300">Sound Effects</span>
+                <button class="px-4 py-1.5 bg-green-500 rounded-full text-xs font-bold shadow">ON</button>
+            </div>
+            <div class="flex justify-between items-center bg-[#151c4a] p-4 rounded-xl border border-indigo-900">
+                <span class="font-semibold text-gray-300">Vibration Feedback</span>
+                <button class="px-4 py-1.5 bg-green-500 rounded-full text-xs font-bold shadow">ON</button>
+            </div>
+            <div class="flex justify-between items-center bg-[#151c4a] p-4 rounded-xl border border-indigo-900">
+                <span class="font-semibold text-gray-300">FTUE Mode</span>
+                <button id="ftue-toggle" onclick="toggleFTUEMode()" class="px-4 py-1.5 bg-green-500 rounded-full text-xs font-bold shadow">ACTIVE</button>
+            </div>
+        </div>
+
+        <div class="text-center text-[10px] text-gray-500">
+            "Not a RPG" Prototype v1.1.0 • Designed by Desi
+        </div>
+    </div>
+
+
+    <!-- ==================== DEVELOPER PANEL ==================== -->
+    <div id="dev-panel" class="hidden absolute right-10 top-20 w-[320px] bg-indigo-950/95 border-2 border-purple-500/50 rounded-2xl p-4 shadow-2xl z-50 max-h-[600px] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-indigo-900 pb-2 mb-3">
+            <span class="font-bold text-purple-300 text-sm">🛠️ Developer Cheat Console</span>
+            <button onclick="toggleDevPanel()" class="text-gray-400 hover:text-white text-xs">✕</button>
+        </div>
+
+        <!-- Level selector cheat (Complete levels below, lock subsequent) -->
+        <div class="mb-3">
+            <label class="block text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">Set Player Level Progression</label>
+            <div class="flex space-x-1">
+                <select id="dev-level-select" class="bg-indigo-900 border border-indigo-800 rounded px-2 py-1 text-xs text-white flex-grow">
+                    <option value="1">Level 1: Forest Ambushes</option>
+                    <option value="2">Level 2: Crossings Core</option>
+                    <option value="3">Level 3: Triple Danger</option>
+                    <option value="4">Level 4: Shadow Matrix</option>
+                    <option value="5">Level 5: Ultimate Raid</option>
+                </select>
+                <button onclick="applyLevelCheat()" class="bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-xs font-bold">Apply</button>
+            </div>
+        </div>
+
+        <!-- Resource depletion cheats -->
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <button onclick="depleteResource('lives')" class="bg-red-900/60 hover:bg-red-800 border border-red-700/40 text-red-200 text-xs py-1.5 px-2 rounded font-semibold text-center">
+                Deplete Lives (0)
+            </button>
+            <button onclick="forceFail()" class="bg-red-900/60 hover:bg-red-800 border border-red-700/40 text-red-200 text-xs py-1.5 px-2 rounded font-semibold text-center">
+                Force Fail State
+            </button>
+            <button onclick="instantlyWinLevel()" class="bg-green-900/60 hover:bg-green-800 border border-green-700/40 text-green-200 text-xs py-1.5 px-2 rounded font-semibold text-center">
+                Instantly Win
+            </button>
+            <button onclick="clearAllActiveSlots()" class="bg-amber-900/60 hover:bg-amber-800 border border-amber-700/40 text-amber-200 text-xs py-1.5 px-2 rounded font-semibold text-center">
+                Clear Active Slots
+            </button>
+        </div>
+
+        <!-- Visual options -->
+        <div class="flex flex-col space-y-1.5 mb-3 p-2 bg-indigo-900/30 rounded border border-indigo-900">
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-300">Show Grid Outline</span>
+                <input type="checkbox" id="dev-show-grid" onchange="toggleGridOutline()" class="rounded bg-indigo-950 border-indigo-800 text-purple-600">
+            </div>
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-300">Render Path Overlays</span>
+                <input type="checkbox" id="dev-show-paths" checked onchange="togglePathOverlays()" class="rounded bg-indigo-950 border-indigo-800 text-purple-600">
+            </div>
+        </div>
+
+        <!-- Log Output -->
+        <div>
+            <span class="block text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">State Log</span>
+            <div id="dev-log" class="h-24 bg-black/60 rounded p-1 text-[9px] font-mono text-green-400 overflow-y-auto leading-normal">
+                [SYSTEM] System initialized.<br>
+                [SYSTEM] Level 1 loaded.
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== CORE GAME CODE (JS) ==================== -->
+    <script>
+        // Grid properties: 10x17 cells, 39px square.
+        const GRID_COLS = 10;
+        const GRID_ROWS = 17;
+        const CELL_SIZE = 39;
+
+        // FTUE Configuration
+        let FTUE_LEVEL_LIMIT = 5;
+        let ftueActive = true;
+
+        // Player & Game State
+        let currentLevelIndex = 0;
+        let playerCoins = 150;
+        let playerLives = 3;
+        
+        // Slot Registry: Holds Troop Box in each slot. null if empty.
+        let activeSlots = [null, null, null, null, null];
+        
+        // Active entities references for animation loop
+        let activeHeroes = []; 
+        let activeCoins = [];
+        let completedEnemies = 0;
+        let totalLevelEnemies = 0;
+
+        // Colors configurations
+        const CLASS_CONFIGS = {
+            red: {
+                heroName: "Warrior",
+                heroIcon: "⚔️",
+                enemyName: "Red Troll Archer",
+                enemyIcon: "🏹",
+                colorCode: "#ef4444",
+                portalX: 1, // slot 0 maps to x=1
+            },
+            green: {
+                heroName: "Archer",
+                heroIcon: "🏹",
+                enemyName: "Green Troll",
+                enemyIcon: "🧌",
+                colorCode: "#22c55e",
+                portalX: 3, // slot 1 maps to x=3
+            },
+            blue: {
+                heroName: "Mage",
+                heroIcon: "🧙‍♂️",
+                enemyName: "Blue Healer",
+                enemyIcon: "🧪",
+                colorCode: "#3b82f6",
+                portalX: 5, // slot 2 maps to x=5
+            },
+            yellow: {
+                heroName: "Priest",
+                heroIcon: "🛡️",
+                enemyName: "Yellow Demon",
+                enemyIcon: "😈",
+                colorCode: "#eab308",
+                portalX: 7, // slot 3 maps to x=7
+            },
+            black: {
+                heroName: "Ninja",
+                heroIcon: "🥷",
+                enemyName: "Black Troll",
+                enemyIcon: "🪓",
+                colorCode: "#000000",
+                portalX: 9, // slot 4 maps to x=9
+            }
+        };
+
+        // Handcrafted Levels Database
+        const LEVELS = [
+            {
+                id: 1,
+                name: "Forest Ambushes",
+                enemyCamps: [
+                    { id: 'ec_red_1', color: 'red', x: 2, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_green_1', color: 'green', x: 7, y: 4, count: 3, maxCount: 3 }
+                ],
+                paths: {
+                    // Start slot maps to start coordinate of path
+                    // Slot 0 (x:1) connects to Red
+                    red: [{x: 1, y: 15}, {x: 1, y: 3}, {x: 2, y: 3}],
+                    // Slot 1 (x:3) connects to Green
+                    green: [{x: 3, y: 15}, {x: 3, y: 4}, {x: 7, y: 4}]
+                },
+                boxLanes: [
+                    [
+                        { color: 'red', count: 2, uid: 'b1' },
+                        { color: 'green', count: 3, uid: 'b2' }
+                    ]
+                ]
+            },
+            {
+                id: 2,
+                name: "Crossings Core",
+                enemyCamps: [
+                    { id: 'ec_red_2', color: 'red', x: 2, y: 3, count: 3, maxCount: 3 },
+                    { id: 'ec_green_2', color: 'green', x: 7, y: 3, count: 3, maxCount: 3 }
+                ],
+                paths: {
+                    // Trails cross at (5, 7)
+                    red: [{x: 1, y: 15}, {x: 1, y: 7}, {x: 8, y: 7}, {x: 8, y: 3}, {x: 2, y: 3}],
+                    green: [{x: 3, y: 15}, {x: 3, y: 9}, {x: 5, y: 9}, {x: 5, y: 3}, {x: 7, y: 3}]
+                },
+                boxLanes: [
+                    [
+                        { color: 'red', count: 3, uid: 'b3' },
+                        { color: 'green', count: 3, uid: 'b4' }
+                    ]
+                ]
+            },
+            {
+                id: 3,
+                name: "Triple Danger",
+                enemyCamps: [
+                    { id: 'ec_red_3', color: 'red', x: 1, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_green_3', color: 'green', x: 5, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_blue_3', color: 'blue', x: 9, y: 3, count: 2, maxCount: 2 }
+                ],
+                paths: {
+                    // Visual crossings
+                    red: [{x: 1, y: 15}, {x: 1, y: 10}, {x: 5, y: 10}, {x: 5, y: 5}, {x: 1, y: 5}, {x: 1, y: 3}],
+                    green: [{x: 3, y: 15}, {x: 3, y: 8}, {x: 7, y: 8}, {x: 7, y: 3}, {x: 5, y: 3}],
+                    blue: [{x: 5, y: 15}, {x: 5, y: 12}, {x: 9, y: 12}, {x: 9, y: 3}]
+                },
+                boxLanes: [
+                    [
+                        { color: 'red', count: 2, uid: 'b5' },
+                        { color: 'blue', count: 2, uid: 'b6' },
+                        { color: 'green', count: 2, uid: 'b7' }
+                    ]
+                ]
+            },
+            {
+                id: 4,
+                name: "Shadow Matrix",
+                enemyCamps: [
+                    { id: 'ec_yellow_4', color: 'yellow', x: 2, y: 3, count: 3, maxCount: 3 },
+                    { id: 'ec_black_4', color: 'black', x: 7, y: 5, count: 4, maxCount: 4 }
+                ],
+                paths: {
+                    yellow: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 2, y: 10}, {x: 2, y: 3}],
+                    black: [{x: 9, y: 15}, {x: 9, y: 8}, {x: 4, y: 8}, {x: 4, y: 5}, {x: 7, y: 5}]
+                },
+                boxLanes: [
+                    [
+                        { color: 'yellow', count: 3, uid: 'b8' },
+                        { color: 'black', count: 4, uid: 'b9' }
+                    ]
+                ]
+            },
+            {
+                id: 5,
+                name: "Ultimate Raid",
+                enemyCamps: [
+                    { id: 'ec_red_5', color: 'red', x: 1, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_green_5', color: 'green', x: 3, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_blue_5', color: 'blue', x: 5, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_yellow_5', color: 'yellow', x: 7, y: 3, count: 2, maxCount: 2 },
+                    { id: 'ec_black_5', color: 'black', x: 9, y: 3, count: 2, maxCount: 2 }
+                ],
+                paths: {
+                    red: [{x: 1, y: 15}, {x: 1, y: 12}, {x: 3, y: 12}, {x: 3, y: 7}, {x: 1, y: 7}, {x: 1, y: 3}],
+                    green: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 5, y: 10}, {x: 5, y: 3}, {x: 3, y: 3}],
+                    blue: [{x: 5, y: 15}, {x: 5, y: 8}, {x: 7, y: 8}, {x: 7, y: 5}, {x: 5, y: 5}, {x: 5, y: 3}],
+                    yellow: [{x: 7, y: 15}, {x: 7, y: 12}, {x: 9, y: 12}, {x: 9, y: 7}, {x: 7, y: 7}, {x: 7, y: 3}],
+                    black: [{x: 9, y: 15}, {x: 9, y: 9}, {x: 9, y: 3}]
+                },
+                boxLanes: [
+                    [
+                        { color: 'red', count: 2, uid: 'b10' },
+                        { color: 'green', count: 2, uid: 'b11' },
+                        { color: 'blue', count: 2, uid: 'b12' }
+                    ],
+                    [
+                        { color: 'yellow', count: 2, uid: 'b13' },
+                        { color: 'black', count: 2, uid: 'b14' }
+                    ]
+                ]
+            }
+        ];
+
+
+        // Initialize the game
+        function initGame() {
+            logDev("Initializing Prototype...");
+            buildGridCells();
+            loadLevel(currentLevelIndex);
+            
+            // Start main tick loop
+            requestAnimationFrame(gameTick);
+        }
+
+        // Build grid cells for reference
+        function buildGridCells() {
+            const grid = document.getElementById('grid-overlay');
+            grid.innerHTML = '';
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell-highlight';
+                    cell.dataset.r = r;
+                    cell.dataset.c = c;
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Toggle Dev grid outlines
+        function toggleGridOutline() {
+            const show = document.getElementById('dev-show-grid').checked;
+            document.querySelectorAll('.grid-cell-highlight').forEach(cell => {
+                if (show) {
+                    cell.classList.add('debug-active');
+                } else {
+                    cell.classList.remove('debug-active');
+                }
+            });
+            logDev(`Grid outlines toggled: ${show}`);
+        }
+
+        // Toggle path neon overlays
+        function togglePathOverlays() {
+            const show = document.getElementById('dev-show-paths').checked;
+            document.getElementById('trails-svg-container').style.display = show ? 'block' : 'none';
+            logDev(`Path overlays toggled: ${show}`);
+        }
+
+        // Load level parameters
+        function loadLevel(levelIndex) {
+            currentLevelIndex = levelIndex;
+            const level = LEVELS[levelIndex];
+            logDev(`Loading level ${level.id}: ${level.name}`);
+
+            // HUD updates
+            document.getElementById('hud-level-num').textContent = level.id;
+            document.getElementById('hud-lives').textContent = playerLives;
+            document.getElementById('hud-coins').textContent = playerCoins;
+
+            // Clear old game state
+            activeSlots = [null, null, null, null, null];
+            activeHeroes = [];
+            activeCoins = [];
+            completedEnemies = 0;
+            
+            // Calculate total level enemies
+            totalLevelEnemies = level.enemyCamps.reduce((acc, c) => acc + c.count, 0);
+            updatePrincessLock();
+
+            // Clear visuals
+            const entitiesLayer = document.getElementById('entities-layer');
+            entitiesLayer.innerHTML = '';
+            renderSlotsTray();
+            
+            // Draw Portals, Enemy Camps, and Princess Cage
+            drawStaticEntities(level);
+
+            // Re-render Box supply queue
+            renderBoxLanes(level);
+
+            // Redraw Paths in SVG
+            drawSVGPaths(level);
+
+            // Close modals
+            document.getElementById('fail-modal').classList.add('hidden');
+            document.getElementById('win-modal').classList.add('hidden');
+        }
+
+        // Render visual path overlay in SVG
+        function drawSVGPaths(level) {
+            const svg = document.getElementById('trails-svg-container');
+            svg.innerHTML = '';
+            
+            for (const [color, path] of Object.entries(level.paths)) {
+                const config = CLASS_CONFIGS[color];
+                if (!config) continue;
+
+                // Create stroke path
+                let pathD = "";
+                path.forEach((pt, idx) => {
+                    // Center coordinates of cell
+                    const pixelX = pt.x * CELL_SIZE + CELL_SIZE / 2;
+                    const pixelY = pt.y * CELL_SIZE + CELL_SIZE / 2;
+                    if (idx === 0) {
+                        pathD += `M ${pixelX} ${pixelY}`;
+                    } else {
+                        pathD += ` L ${pixelX} ${pixelY}`;
+                    }
+                });
+
+                // Neon background glow
+                const glow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                glow.setAttribute("d", pathD);
+                glow.setAttribute("stroke", config.colorCode);
+                glow.setAttribute("stroke-width", "6");
+                glow.setAttribute("stroke-linecap", "round");
+                glow.setAttribute("stroke-linejoin", "round");
+                glow.setAttribute("fill", "none");
+                glow.setAttribute("opacity", "0.25");
+                glow.setAttribute("class", "neon-trail");
+                svg.appendChild(glow);
+
+                // Sharp center line
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                line.setAttribute("d", pathD);
+                line.setAttribute("stroke", config.colorCode);
+                line.setAttribute("stroke-width", "2");
+                line.setAttribute("stroke-dasharray", "4,4");
+                line.setAttribute("stroke-linecap", "round");
+                line.setAttribute("stroke-linejoin", "round");
+                line.setAttribute("fill", "none");
+                svg.appendChild(line);
+            }
+        }
+
+        // Draw static board elements: Portals, Trolls
+        function drawStaticEntities(level) {
+            const layer = document.getElementById('entities-layer');
+
+            // Draw portals at the bottom mapping to the Slots
+            // A portal on board sits at (1 + slotIndex * 2, 15)
+            for (let i = 0; i < 5; i++) {
+                // Find color mapping
+                const color = getColorForSlot(i, level);
+                if (!color) continue;
+                const config = CLASS_CONFIGS[color];
+
+                const pX = (1 + i * 2);
+                const pY = 15;
+
+                const portalDiv = document.createElement('div');
+                portalDiv.className = "absolute flex items-center justify-center rounded-full transition-all duration-300";
+                portalDiv.style.width = `${CELL_SIZE}px`;
+                portalDiv.style.height = `${CELL_SIZE}px`;
+                portalDiv.style.left = `${pX * CELL_SIZE}px`;
+                portalDiv.style.top = `${pY * CELL_SIZE}px`;
+                portalDiv.style.background = `radial-gradient(circle, ${config.colorCode}40 0%, transparent 80%)`;
+                portalDiv.style.border = `2px solid ${config.colorCode}70`;
+                portalDiv.innerHTML = `<span class="text-xs">🌀</span>`;
+                portalDiv.id = `portal-${color}`;
+                layer.appendChild(portalDiv);
+            }
+
+            // Draw Enemy Camps (stacks of trolls/demons)
+            level.enemyCamps.forEach(camp => {
+                const config = CLASS_CONFIGS[camp.color];
+                const campDiv = document.createElement('div');
+                campDiv.id = `camp-${camp.id}`;
+                campDiv.className = "absolute flex flex-col items-center justify-end z-20";
+                campDiv.style.width = `${CELL_SIZE}px`;
+                campDiv.style.height = `${CELL_SIZE * 2}px`;
+                campDiv.style.left = `${camp.x * CELL_SIZE}px`;
+                campDiv.style.top = `${(camp.y - 1) * CELL_SIZE}px`; // Occupies grid cell
+
+                // Stack rendering
+                updateCampStackVisual(campDiv, camp);
+                layer.appendChild(campDiv);
+            });
+        }
+
+        // Helper to find slot index for a color
+        function getColorForSlot(slotIndex, level) {
+            // Find which path start matches this slot coordinate (1 + slotIndex*2)
+            const targetX = 1 + slotIndex * 2;
+            for (const [color, path] of Object.entries(level.paths)) {
+                if (path[0].x === targetX && path[0].y === 15) {
+                    return color;
+                }
+            }
+            return null;
+        }
+
+        // Render stacked character blocks for camp
+        function updateCampStackVisual(container, camp) {
+            container.innerHTML = '';
+            const config = CLASS_CONFIGS[camp.color];
+            
+            // Counter Badge
+            if (camp.count > 0) {
+                const badge = document.createElement('span');
+                badge.className = "bg-black/80 text-[9px] px-1 rounded-full text-white font-bold border border-white/20 mb-1 scale-90";
+                badge.textContent = `${camp.count}/${camp.maxCount}`;
+                container.appendChild(badge);
+            }
+
+            // Visual stacked characters
+            for (let i = 0; i < camp.count; i++) {
+                const charEl = document.createElement('div');
+                charEl.className = "w-7 h-7 flex items-center justify-center text-base rounded shadow-md transition-all duration-300 transform";
+                charEl.style.backgroundColor = config.colorCode + "90";
+                charEl.style.border = `1.5px solid ${config.colorCode}`;
+                charEl.style.marginBottom = "-12px"; // overlaps vertically to form a stack
+                charEl.style.zIndex = 10 + i;
+                charEl.innerHTML = config.enemyIcon;
+                container.appendChild(charEl);
+            }
+
+            // If empty, draw a ruins icon
+            if (camp.count <= 0) {
+                container.innerHTML = `<span class="text-xs text-gray-600">🪨</span>`;
+            }
+        }
+
+        // Render Active Slots Bar
+        function renderSlotsTray() {
+            for (let i = 0; i < 5; i++) {
+                const container = document.getElementById(`slot-${i}`);
+                container.innerHTML = '';
+                container.style.border = '2px dashed rgba(99, 102, 241, 0.3)';
+
+                const boxData = activeSlots[i];
+                if (boxData) {
+                    // Render Troop Box placed inside this active slot
+                    const config = CLASS_CONFIGS[boxData.color];
+                    
+                    const boxEl = document.createElement('div');
+                    boxEl.className = "w-12 h-12 rounded-xl flex flex-col items-center justify-center text-white relative transition-all duration-300";
+                    boxEl.style.backgroundColor = config.colorCode;
+                    boxEl.style.boxShadow = `0 4px 10px ${config.colorCode}60`;
+
+                    // Hero character icon preview
+                    const icon = document.createElement('span');
+                    icon.className = "text-xl leading-none";
+                    icon.textContent = config.heroIcon;
+                    boxEl.appendChild(icon);
+
+                    // Counter badge on box
+                    const badge = document.createElement('span');
+                    badge.className = "absolute -top-1.5 -right-1.5 bg-yellow-500 text-[10px] text-black font-bold w-5 h-5 rounded-full border-2 border-white flex items-center justify-center";
+                    badge.id = `slot-count-${i}`;
+                    badge.textContent = boxData.count;
+                    boxEl.appendChild(badge);
+
+                    // Add custom block state warning
+                    const blockIndicator = document.createElement('span');
+                    blockIndicator.id = `slot-block-${i}`;
+                    blockIndicator.className = "hidden absolute -bottom-1 bg-red-600 text-[8px] text-white font-bold px-1 rounded shadow border border-red-400";
+                    blockIndicator.textContent = "BLOCKED";
+                    boxEl.appendChild(blockIndicator);
+
+                    container.appendChild(boxEl);
+                    container.style.border = `2px solid ${config.colorCode}`;
+                }
+            }
+        }
+
+        // Render troop queue at the bottom
+        function renderBoxLanes(level) {
+            const container = document.getElementById('box-lanes-container');
+            container.innerHTML = '';
+
+            level.boxLanes.forEach((lane, laneIdx) => {
+                const laneEl = document.createElement('div');
+                laneEl.className = "flex space-x-3 justify-center items-center";
+
+                lane.forEach(box => {
+                    const config = CLASS_CONFIGS[box.color];
+                    
+                    // Create box button
+                    const boxBtn = document.createElement('button');
+                    boxBtn.id = `box-btn-${box.uid}`;
+                    boxBtn.onclick = () => tapTroopBox(box, laneIdx);
+                    boxBtn.className = "w-12 h-12 rounded-xl flex flex-col items-center justify-center text-white relative shadow-lg transform active:scale-95 transition-all duration-150 border-b-4";
+                    boxBtn.style.backgroundColor = config.colorCode;
+                    boxBtn.style.borderColor = adjustColorBrightness(config.colorCode, -30);
+
+                    // Character Icon
+                    const icon = document.createElement('span');
+                    icon.className = "text-xl leading-none mb-0.5";
+                    icon.textContent = config.heroIcon;
+                    boxBtn.appendChild(icon);
+
+                    // Count Badge
+                    const badge = document.createElement('span');
+                    badge.className = "absolute -top-1.5 -right-1.5 bg-yellow-400 text-black text-[9px] font-bold w-4 h-4 rounded-full border border-white flex items-center justify-center";
+                    badge.textContent = box.count;
+                    boxBtn.appendChild(badge);
+
+                    laneEl.appendChild(boxBtn);
+                });
+
+                container.appendChild(laneEl);
+            });
+        }
+
+        // Tap a troop box to send it to the Active Slots
+        function tapTroopBox(box, laneIdx) {
+            // Find empty slot
+            const emptyIdx = activeSlots.indexOf(null);
+            if (emptyIdx === -1) {
+                logDev("No active slots available! Free up slots first.");
+                return;
+            }
+
+            // Fill active slot
+            activeSlots[emptyIdx] = {
+                color: box.color,
+                count: box.count,
+                initialCount: box.count,
+                uid: box.uid,
+                spawnedCount: 0, // Number of heroes spawned from this box currently
+                slotIndex: emptyIdx
+            };
+
+            // Remove box from bottom queue visually/internally
+            const level = LEVELS[currentLevelIndex];
+            level.boxLanes[laneIdx] = level.boxLanes[laneIdx].filter(b => b.uid !== box.uid);
+            
+            logDev(`Tapped ${box.color} box. Flying to Active Slot ${emptyIdx}`);
+            
+            // Re-render
+            renderSlotsTray();
+            renderBoxLanes(level);
+
+            // Play flying animation reference
+            triggerFlyingAnimation(box.uid, emptyIdx);
+
+            // Force pathing evaluation
+            evaluatePathStates();
+        }
+
+        // Pure JS CSS transform-based flying effect
+        function triggerFlyingAnimation(boxUid, slotIdx) {
+            // Simulated flying animation directly updating logs/states
+        }
+
+        // Evaluate topological pathing states and set BLOCKED badges
+        function evaluatePathStates() {
+            const level = LEVELS[currentLevelIndex];
+            
+            // 1. Determine active paths based on color
+            let activeColors = [];
+            activeSlots.forEach(slot => {
+                if (slot) activeColors.push(slot.color);
+            });
+
+            // 2. Evaluate intersections & blockage for each active slot
+            for (let i = 0; i < 5; i++) {
+                const slot = activeSlots[i];
+                if (!slot) continue;
+
+                const color = slot.color;
+                const path = level.paths[color];
+                if (!path) continue;
+
+                // Check if our path intersects with ANY path that is currently "Marching"
+                let isBlocked = false;
+
+                // Loop other active slots
+                for (let j = 0; j < 5; j++) {
+                    if (i === j) continue; // skip self
+                    const otherSlot = activeSlots[j];
+                    if (!otherSlot) continue;
+
+                    // If other path is active, check intersection
+                    const otherColor = otherSlot.color;
+                    const otherPath = level.paths[otherColor];
+                    if (!otherPath) continue;
+
+                    // If they overlap, and the other is ALREADY marching (or has smaller slot index / was activated earlier)
+                    if (pathsIntersect(path, otherPath)) {
+                        // Priority rule: earlier slot index or active marching heroes has priority
+                        const hasMarchingHeroes = activeHeroes.some(h => h.color === otherColor);
+                        if (hasMarchingHeroes || j < i) {
+                            isBlocked = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Update UI state
+                const badgeEl = document.getElementById(`slot-block-${i}`);
+                if (badgeEl) {
+                    if (isBlocked) {
+                        badgeEl.classList.remove('hidden');
+                        logDev(`Slot ${i} [${color}] is BLOCKED by intersecting active paths.`);
+                    } else {
+                        badgeEl.classList.add('hidden');
+                    }
+                }
+
+                // If NOT blocked and we have heroes left to spawn, spawn them!
+                if (!isBlocked && slot.count > 0 && slot.spawnedCount < slot.count) {
+                    spawnHero(slot);
+                }
+            }
+
+            // Check Fail state
+            checkFailState();
+        }
+
+        // Simple coordinate collision checker
+        function pathsIntersect(p1, p2) {
+            for (const pt1 of p1) {
+                for (const pt2 of p2) {
+                    // Do not block on starting portals or ending portals if they align
+                    if (pt1.x === pt2.x && pt1.y === pt2.y) {
+                        // If they intersect in the middle of paths
+                        if (pt1.y !== 15 && pt1.y !== 3) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Check if all slots are full and blocked -> fail state!
+        function checkFailState() {
+            const level = LEVELS[currentLevelIndex];
+            
+            // Slots full?
+            const isFull = activeSlots.every(s => s !== null);
+            if (!isFull) return;
+
+            // Are all slots currently blocked and no heroes are active?
+            const noActiveHeroes = activeHeroes.length === 0;
+            
+            // Check if every slot has the "BLOCKED" badge active
+            let allBlocked = true;
+            for (let i = 0; i < 5; i++) {
+                const badge = document.getElementById(`slot-block-${i}`);
+                if (badge && badge.classList.contains('hidden')) {
+                    allBlocked = false;
+                }
+            }
+
+            if (allBlocked && noActiveHeroes) {
+                logDev("[FAIL] ALL ACTIVE SLOTS BLOCKED! Stalemate reached.");
+                triggerFailState();
+            }
+        }
+
+        // Trigger fail overlay
+        function triggerFailState() {
+            document.getElementById('fail-modal').classList.remove('hidden');
+            playerLives = Math.max(0, playerLives - 1);
+            document.getElementById('hud-lives').textContent = playerLives;
+        }
+
+        // Spawn a hero
+        function spawnHero(slot) {
+            const level = LEVELS[currentLevelIndex];
+            const color = slot.color;
+            const path = level.paths[color];
+            const config = CLASS_CONFIGS[color];
+
+            slot.spawnedCount++; // track active spawned
+            
+            // Find target enemy camp coord
+            const enemyCamp = level.enemyCamps.find(c => c.color === color);
+            
+            // Create hero entity visual object
+            const hero = {
+                id: `hero-${Date.now()}-${Math.random()}`,
+                color: color,
+                path: [...path], // copy coordinates
+                currentPathIndex: 0,
+                x: path[0].x,
+                y: path[0].y,
+                pixelX: path[0].x * CELL_SIZE,
+                pixelY: path[0].y * CELL_SIZE,
+                state: 'marching_up', // marching_up, battle, marching_down, done
+                battleTimer: 0,
+                boxUid: slot.uid,
+                slotIndex: slot.slotIndex,
+                domEl: null
+            };
+
+            // Render Hero on screen
+            const layer = document.getElementById('entities-layer');
+            const heroDiv = document.createElement('div');
+            heroDiv.id = hero.id;
+            heroDiv.className = "absolute z-30 transition-all duration-[200ms] ease-linear flex items-center justify-center text-xl font-bold bg-white/10 rounded-full";
+            heroDiv.style.width = `${CELL_SIZE - 4}px`;
+            heroDiv.style.height = `${CELL_SIZE - 4}px`;
+            heroDiv.style.left = `${hero.pixelX}px`;
+            heroDiv.style.top = `${hero.pixelY}px`;
+            heroDiv.innerHTML = `<span class="transform transition-transform scale-110">${config.heroIcon}</span>`;
+            
+            layer.appendChild(heroDiv);
+            hero.domEl = heroDiv;
+
+            activeHeroes.push(hero);
+            logDev(`[SPAWN] ${config.heroName} emerged from slot ${slot.slotIndex}`);
+        }
+
+        // Main game ticker at 30/60 fps
+        let lastTime = 0;
+        function gameTick(timestamp) {
+            const elapsed = timestamp - lastTime;
+            
+            // Run state logic every ~150ms for smooth step movement
+            if (elapsed > 180) {
+                lastTime = timestamp;
+                updateHeroesMovement();
+                updateCoinsMovement();
+            }
+
+            requestAnimationFrame(gameTick);
+        }
+
+        // Hero state machine updates
+        function updateHeroesMovement() {
+            const level = LEVELS[currentLevelIndex];
+
+            for (let i = activeHeroes.length - 1; i >= 0; i--) {
+                const hero = activeHeroes[i];
+                const config = CLASS_CONFIGS[hero.color];
+
+                if (hero.state === 'marching_up') {
+                    // Walk up predefined trail
+                    hero.currentPathIndex++;
+                    if (hero.currentPathIndex < hero.path.length) {
+                        const nextPt = hero.path[hero.currentPathIndex];
+                        hero.x = nextPt.x;
+                        hero.y = nextPt.y;
+                        hero.pixelX = hero.x * CELL_SIZE;
+                        hero.pixelY = hero.y * CELL_SIZE;
+                        updateHeroDOMPosition(hero);
+                    } else {
+                        // Reached the destination enemy camp! Initiate 1-second battle pause
+                        hero.state = 'battle';
+                        hero.battleTimer = 6; // ~1 second (6 ticks of 180ms)
+                        logDev(`[BATTLE] ${config.heroName} engaged battle at enemy camp`);
+                        triggerBattleEffects(hero);
+                    }
+                } 
+                else if (hero.state === 'battle') {
+                    hero.battleTimer--;
+                    // Visual clashing sword flicker
+                    if (hero.battleTimer % 2 === 0) {
+                        hero.domEl.style.filter = "brightness(2)";
+                    } else {
+                        hero.domEl.style.filter = "none";
+                    }
+
+                    if (hero.battleTimer <= 0) {
+                        // Battle completed!
+                        hero.domEl.style.filter = "none";
+                        
+                        // Decrement enemy camp count
+                        const enemyCamp = level.enemyCamps.find(c => c.color === hero.color);
+                        if (enemyCamp && enemyCamp.count > 0) {
+                            enemyCamp.count--;
+                            
+                            // Visual update for the camp stack
+                            const campDiv = document.getElementById(`camp-${enemyCamp.id}`);
+                            if (campDiv) updateCampStackVisual(campDiv, enemyCamp);
+
+                            // Create spinning gold coin visual dragging behind the hero
+                            spawnCoin(hero);
+
+                            // Progress lock count
+                            completedEnemies++;
+                            updatePrincessLock();
+
+                            // Set state to walk back down with coin
+                            hero.state = 'marching_down';
+                            logDev(`[LOOT] Enemy defeated! Gold coin spawned.`);
+                        } else {
+                            // Camp was already empty
+                            hero.state = 'marching_down';
+                        }
+                    }
+                } 
+                else if (hero.state === 'marching_down') {
+                    // Walk back down to start portal
+                    hero.currentPathIndex--;
+                    if (hero.currentPathIndex >= 0) {
+                        const prevPt = hero.path[hero.currentPathIndex];
+                        hero.x = prevPt.x;
+                        hero.y = prevPt.y;
+                        hero.pixelX = hero.x * CELL_SIZE;
+                        hero.pixelY = hero.y * CELL_SIZE;
+                        updateHeroDOMPosition(hero);
+                    } else {
+                        // Reached the active slot! Deposit loot and terminate
+                        hero.state = 'done';
+                        logDev(`[DEPOSIT] ${config.heroName} deposited loot!`);
+                        
+                        // Increment coins HUD
+                        playerCoins += 10;
+                        const coinsHud = document.getElementById('hud-coins');
+                        coinsHud.textContent = playerCoins;
+                        coinsHud.classList.add('coin-collecting');
+                        setTimeout(() => coinsHud.classList.remove('coin-collecting'), 400);
+
+                        // Decrement Troop box count
+                        const slot = activeSlots[hero.slotIndex];
+                        if (slot) {
+                            slot.count--;
+                            slot.spawnedCount = Math.max(0, slot.spawnedCount - 1);
+                            
+                            // Re-render slot visual counters
+                            const counterEl = document.getElementById(`slot-count-${hero.slotIndex}`);
+                            if (counterEl) counterEl.textContent = slot.count;
+
+                            if (slot.count <= 0) {
+                                // Box fully cleared! Clear active slot
+                                activeSlots[hero.slotIndex] = null;
+                                logDev(`[CLEARED] Slot ${hero.slotIndex} fully cleared!`);
+                                renderSlotsTray();
+                            }
+                        }
+
+                        // Remove hero visual element
+                        hero.domEl.remove();
+                        activeHeroes.splice(i, 1);
+
+                        // Force evaluate pathing as paths opened up
+                        evaluatePathStates();
+                    }
+                }
+            }
+        }
+
+        // Smooth pixel movement on DOM
+        function updateHeroDOMPosition(hero) {
+            if (hero.domEl) {
+                hero.domEl.style.left = `${hero.pixelX}px`;
+                hero.domEl.style.top = `${hero.pixelY}px`;
+            }
+        }
+
+        // Spawn gold coin visual dragging behind the hero
+        function spawnCoin(hero) {
+            const coin = {
+                id: `coin-${Date.now()}`,
+                heroId: hero.id,
+                x: hero.x,
+                y: hero.y,
+                pixelX: hero.pixelX,
+                pixelY: hero.pixelY,
+                domEl: null
+            };
+
+            const layer = document.getElementById('entities-layer');
+            const coinEl = document.createElement('div');
+            coinEl.id = coin.id;
+            coinEl.className = "absolute z-20 text-sm animate-spin";
+            coinEl.style.left = `${coin.pixelX + 12}px`;
+            coinEl.style.top = `${coin.pixelY + 12}px`;
+            coinEl.innerHTML = "🪙";
+            layer.appendChild(coinEl);
+
+            coin.domEl = coinEl;
+            activeCoins.push(coin);
+        }
+
+        // Drag coin visual updates
+        function updateCoinsMovement() {
+            for (let i = activeCoins.length - 1; i >= 0; i--) {
+                const coin = activeCoins[i];
+                // Find matching hero
+                const hero = activeHeroes.find(h => h.id === coin.heroId);
+                if (hero && hero.state === 'marching_down') {
+                    // Follow hero drag coordinate
+                    coin.pixelX = hero.pixelX;
+                    coin.pixelY = hero.pixelY;
+                    coin.domEl.style.left = `${coin.pixelX + 12}px`;
+                    coin.domEl.style.top = `${coin.pixelY + 12}px`;
+                } else {
+                    // Hero reached slot and was removed
+                    coin.domEl.remove();
+                    activeCoins.splice(i, 1);
+                }
+            }
+        }
+
+        // Padlock countdown unlock
+        function updatePrincessLock() {
+            const remaining = totalLevelEnemies - completedEnemies;
+            const countEl = document.getElementById('princess-lock-count');
+            
+            if (countEl) countEl.textContent = Math.max(0, remaining);
+
+            if (remaining <= 0) {
+                // Rescue completed! Unlocked bars
+                const cage = document.getElementById('princess-cage');
+                cage.classList.remove('border-slate-500');
+                cage.classList.add('border-yellow-500', 'bg-yellow-900/30');
+                cage.innerHTML = `<div class="text-4xl animate-bounce">👑✨</div>`;
+                
+                const padlock = document.getElementById('cage-padlock');
+                padlock.className = "mt-1 bg-green-500 border border-green-300 text-white font-bold text-xs rounded px-2 py-0.5 flex items-center shadow-md z-30";
+                padlock.innerHTML = "<span>🔓</span> <span>SAVED</span>";
+
+                logDev("[SUCCESS] PRINCESS UNLOCKED AND RESCUED!");
+                setTimeout(triggerWinState, 1500);
+            }
+        }
+
+        // Trigger Win Overlay
+        function triggerWinState() {
+            document.getElementById('win-modal').classList.remove('hidden');
+        }
+
+        // Pop sparkly stars during battle
+        function triggerBattleEffects(hero) {
+            // Particle sparkles reference
+        }
+
+        // Helper to adjust hex colors brightness
+        function adjustColorBrightness(hex, percent) {
+            let num = parseInt(hex.replace("#",""),16),
+            amt = Math.round(2.55 * percent),
+            R = (num >> 16) + amt,
+            G = (num >> 8 & 0x00FF) + amt,
+            B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R<255?R<0?0:R:255)*0x10000 + (G<255?G<0?0:G:255)*0x100 + (B<255?B<0?0:B:255)).toString(16).slice(1);
+        }
+
+        // Developer Logs console printer
+        function logDev(message) {
+            const consoleBox = document.getElementById('dev-log');
+            if (consoleBox) {
+                consoleBox.innerHTML += `<br>[STATE] ${message}`;
+                consoleBox.scrollTop = consoleBox.scrollHeight;
+            }
+            console.log(message);
+        }
+
+        // Apply selected Level progression
+        function applyLevelCheat() {
+            const select = document.getElementById('dev-level-select');
+            const levelIdx = parseInt(select.value) - 1;
+            loadLevel(levelIdx);
+        }
+
+        // Instantly clear the level
+        function instantlyWinLevel() {
+            completedEnemies = totalLevelEnemies;
+            updatePrincessLock();
+        }
+
+        // Instantly force fail state
+        function forceFail() {
+            triggerFailState();
+        }
+
+        // Deplete lives resource
+        function depleteResource(type) {
+            if (type === 'lives') {
+                playerLives = 0;
+                document.getElementById('hud-lives').textContent = 0;
+                logDev("Lives depleted to 0!");
+            }
+        }
+
+        // Clear slot containers
+        function clearAllActiveSlots() {
+            activeSlots = [null, null, null, null, null];
+            renderSlotsTray();
+            evaluatePathStates();
+            logDev("Active Slots cleared!");
+        }
+
+        // Toggle Dev Panel Box
+        function toggleDevPanel() {
+            const el = document.getElementById('dev-panel');
+            el.classList.toggle('hidden');
+        }
+
+        // Modal triggers
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function toggleFTUEMode() {
+            ftueActive = !ftueActive;
+            const btn = document.getElementById('ftue-toggle');
+            if (ftueActive) {
+                btn.className = "px-4 py-1.5 bg-green-500 rounded-full text-xs font-bold shadow";
+                btn.textContent = "ACTIVE";
+            } else {
+                btn.className = "px-4 py-1.5 bg-red-500 rounded-full text-xs font-bold shadow";
+                btn.textContent = "DISABLED";
+            }
+            logDev(`FTUE Mode set to: ${ftueActive}`);
+        }
+
+        // Restart level loop
+        function retryLevel() {
+            loadLevel(currentLevelIndex);
+        }
+
+        // Proceed to next level loop
+        function nextLevel() {
+            const nextIdx = (currentLevelIndex + 1) % LEVELS.length;
+            loadLevel(nextIdx);
+        }
+
+        // Boot system
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
