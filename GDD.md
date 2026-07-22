@@ -84,14 +84,14 @@ The game screen is optimized for a **390px x 844px portrait viewport** with a fl
 ### Two-Way Combat & Loot Dragging
 Once a Troop Box is settled in an Active Slot:
 1.  **Spawning Check:** The game checks if the trail starting from this slot to the corresponding Enemy Camp on the board is **clear and unblocked**.
-2.  **Hero Spawning:** If the path is unblocked, a hero of that box's color emerges from the box in the Active Slot.
-3.  **March Up:** The hero walks **up** the predefined (hidden) trail cell-by-cell.
+2.  **Continuous Spawning & Target Reservation:** If the path is unblocked and there are heroes left in the box to spawn, the box releases a new hero onto the level every **0.5 seconds** (500ms). When a hero is spawned, it dynamically locks onto its target enemy camp, reserving/blocking that cell from other heroes. Only one hero can target/attack a specific enemy cell at any given time. If other heroes of that color want to spawn, they must find a path to a different (untargeted) matching enemy camp, or wait until the current target is defeated and the fighting hero begins returning. Multiple heroes can march, fight, and return simultaneously on different targets.
+3.  **March Up:** Each hero walks **up** the predefined (hidden) trail cell-by-cell.
 4.  **Step-by-Step Enemy Search ("Pac-Man" Clearing):** At each cell along the path, the marching hero checks if there is a living enemy of their matching color on that specific grid cell.
 5.  **Battle Pause:** Upon stepping onto a cell with a matching enemy, the hero stops marching, engages in a **1-second battle animation** to defeat it, turning the enemy into a **Yellow Gold Coin**.
 6.  **March Down:** The hero grabs the coin and immediately walks **down** (backwards along the path from their current position) to the active slot.
-7.  **Sinking:** Once the hero enters the active slot with the coin, the coin is deposited, the box counter decrements, and the next hero is spawned (if any remain).
-8.  **Sequence Clearing:** The next hero will march up, pass through the already-cleared cells (now showing ✨), and walk further up the path until they encounter the next active enemy.
-8.  **Clearing:** When the box counter reaches 0, the empty box vanishes from the Active Slot, freeing up that slot for another box from the columns below.
+7.  **Sinking:** Once a hero enters the active slot with the coin, the coin is deposited, the box counter decrements, and the active hero count decreases.
+8.  **Sequence Clearing:** Subsequent heroes will march up, pass through already-cleared cells (now showing ✨), and walk further up the path until they encounter the next active enemy.
+8.  **Clearing:** When the box counter reaches 0 (all heroes have returned and deposited their coins), the empty box vanishes from the Active Slot, freeing up that slot for another box from the columns below.
 
 ### The Princess Objective & Win State
 *   **The Lock Counter:** The cage padlock displays a count equal to the **total number of living enemies** remaining on the level.
