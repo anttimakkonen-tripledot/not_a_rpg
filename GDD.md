@@ -1,5 +1,5 @@
 # Game Design Document: "Not a RPG"
-## Version 1.4.0 (Dynamic BFS Peeling Grid & Interactive Level Layouts Update)
+## Version 1.4.1 (Smooth Coin Movement, Landing Delay & Decoupled Troop Deployment Polish)
 **Author:** Desi (Expert Casual Mobile Game Designer)  
 **Platform:** Mobile (Portrait 9:16)  
 **Genre:** Color-Sorting Puzzle / Casual Hero Battler  
@@ -83,15 +83,19 @@ The game screen is optimized for a **390px x 844px portrait viewport** with a fl
 
 ### Two-Way Combat & Loot Dragging
 Once a Troop Box is settled in an Active Slot:
-1.  **Spawning Check:** The game checks if the trail starting from this slot to the corresponding Enemy Camp on the board is **clear and unblocked**.
-2.  **Continuous Spawning & Target Reservation:** If the path is unblocked and there are heroes left in the box to spawn, the box releases a new hero onto the level every **0.5 seconds** (500ms). When a hero is spawned, it dynamically locks onto its target enemy camp, reserving/blocking that cell from other heroes. Only one hero can target/attack a specific enemy cell at any given time. If other heroes of that color want to spawn, they must find a path to a different (untargeted) matching enemy camp, or wait until the current target is defeated and the fighting hero begins returning. Multiple heroes can march, fight, and return simultaneously on different targets.
-3.  **March Up:** Each hero walks **up** the predefined (hidden) trail cell-by-cell.
-4.  **Step-by-Step Enemy Search ("Pac-Man" Clearing):** At each cell along the path, the marching hero checks if there is a living enemy of their matching color on that specific grid cell.
-5.  **Battle Pause:** Upon stepping onto a cell with a matching enemy, the hero stops marching, engages in a **1-second battle animation** to defeat it, turning the enemy into a **Yellow Gold Coin**.
-6.  **March Down:** The hero grabs the coin and immediately walks **down** (backwards along the path from their current position) to the active slot.
-7.  **Sinking:** Once a hero enters the active slot with the coin, the coin is deposited, the box counter decrements, and the active hero count decreases.
-8.  **Sequence Clearing:** Subsequent heroes will march up, pass through already-cleared cells (now showing ✨), and walk further up the path until they encounter the next active enemy.
-8.  **Clearing:** When the box counter reaches 0 (all heroes have returned and deposited their coins), the empty box vanishes from the Active Slot, freeing up that slot for another box from the columns below.
+1.  **Landing Delay:** The box has a **0.5-second (500ms) landing delay** before it can begin releasing heroes, allowing for a tactile transition.
+2.  **Spawning Check:** After the landing delay, the game checks if the trail starting from this slot to the corresponding Enemy Camp on the board is **clear and unblocked**.
+3.  **Continuous Spawning, Target Reservation & Counter Countdown:** If the path is unblocked and there are heroes left in the box to spawn, the box releases a new hero onto the level every **0.5 seconds** (500ms).
+    *   **Countdown on Spawn:** As soon as each hero exits/leaves the box, the counter displayed on the box's badge **instantly decrements by 1**, letting the player know exactly how many heroes remain inside the box.
+    *   **Target Reservation:** When a hero spawns, it dynamically locks onto its target enemy camp, reserving/blocking that cell. Only one hero can target/attack a specific enemy cell at any given time.
+4.  **March Up:** Each hero walks **up** the predefined (hidden) trail cell-by-cell.
+5.  **Step-by-Step Enemy Search ("Pac-Man" Clearing):** At each cell along the path, the marching hero checks if there is a living enemy of their matching color on that specific grid cell.
+6.  **Battle Pause:** Upon stepping onto a cell with a matching enemy, the hero stops marching, engages in a **1-second battle animation** to defeat it, turning the enemy into a **Yellow Gold Coin**.
+7.  **March Down & Smooth Coin Following:** The hero grabs the coin and immediately walks **down** (backwards along the path from their current position) to the active slot.
+    *   **Smooth Motion:** The coin smoothly follows the hero in lockstep via smooth position CSS transitions rather than warping abruptly.
+8.  **Sinking:** Once a hero enters the active slot with the coin, the coin is deposited and the active hero count decreases.
+9.  **Sequence Clearing:** Subsequent heroes will march up, pass through already-cleared cells (now showing ✨), and walk further up the path until they encounter the next active enemy.
+10. **Decoupled Deployment & Empty Box Clearing:** When the last hero spawns and leaves the box (the box counter ticks down to `0`), the empty box is **instantly removed** from the Active Slot, freeing that slot immediately so the player can deploy another box from the columns below. Returning heroes continue marching down independently and deposit their coins directly into the empty/re-used slot.
 
 ### The Princess Objective & Win State
 *   **The Lock Counter:** The cage padlock displays a count equal to the **total number of living enemies** remaining on the level.

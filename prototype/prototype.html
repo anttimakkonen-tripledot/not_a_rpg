@@ -983,7 +983,8 @@
                 initialCount: box.count,
                 uid: box.uid,
                 spawnedCount: 0,
-                slotIndex: emptyIdx
+                slotIndex: emptyIdx,
+                lastSpawnTime: Date.now()
             };
 
             // Remove box from column supply
@@ -1173,6 +1174,12 @@
             const config = CLASS_CONFIGS[color];
 
             slot.spawnedCount++; // track active spawned
+            slot.count = Math.max(0, slot.count - 1); // reduce the remaining count in the box
+
+            const counterEl = document.getElementById(`slot-count-${slot.slotIndex}`);
+            if (counterEl) {
+                counterEl.textContent = slot.count;
+            }
             
             const hero = {
                 id: `hero-${Date.now()}-${Math.random()}`,
@@ -1237,10 +1244,18 @@
                     slot.calculatedPath = shortestPath;
 
                     // If we have heroes left to spawn, check the 500ms cooldown
-                    if (slot.count > 0 && slot.spawnedCount < slot.count) {
+                    if (slot.spawnedCount < slot.initialCount) {
                         if (!slot.lastSpawnTime || now - slot.lastSpawnTime >= 500) {
                             spawnHero(slot);
                             slot.lastSpawnTime = now;
+
+                            // If that was the last hero leaving the box, remove the box immediately
+                            if (slot.spawnedCount >= slot.initialCount) {
+                                activeSlots[i] = null;
+                                logDev(`[CLEARED] Slot ${i} cleared! All heroes have spawned and left the box.`);
+                                renderSlotsTray();
+                                evaluatePathStates();
+                            }
                         }
                     }
                 }
@@ -1340,7 +1355,7 @@
                         setTimeout(() => coinsHud.classList.remove('coin-collecting'), 400);
 
                         const slot = activeSlots[hero.slotIndex];
-                        if (slot) {
+                        if (slot && slot.uid === hero.boxUid) {
                             slot.count--;
                             slot.spawnedCount = Math.max(0, slot.spawnedCount - 1);
                             
@@ -1390,6 +1405,7 @@
             coinEl.className = "absolute z-20 text-sm animate-spin";
             coinEl.style.left = `${coin.pixelX + 12}px`;
             coinEl.style.top = `${coin.pixelY + 12}px`;
+            coinEl.style.transition = "left 200ms linear, top 200ms linear";
             coinEl.innerHTML = "🪙";
             layer.appendChild(coinEl);
 
