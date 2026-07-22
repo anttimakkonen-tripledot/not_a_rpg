@@ -37,10 +37,10 @@
         }
 
         .active-slots-tray {
-            height: 100px;
+            height: 90px;
             background: rgba(12, 16, 51, 0.85);
             backdrop-filter: blur(8px);
-            border-top: 2px solid rgba(255, 215, 0, 0.2);
+            border-top: 2px solid rgba(255, 215, 0, 0.15);
             z-index: 40;
         }
 
@@ -129,15 +129,15 @@
 
         <!-- ==================== GAMEPLAY CANVAS (390x663px) ==================== -->
         <!-- Floating playfield where assets are rendered -->
-        <div id="gameplay-canvas" class="w-full h-[663px] relative mt-[80px] overflow-hidden pointer-events-auto">
+        <div id="gameplay-canvas" class="w-full h-[520px] relative mt-[80px] overflow-hidden pointer-events-auto">
             
             <!-- Grid Background Overlay -->
             <div id="grid-overlay" class="grid-overlay absolute inset-0 grid grid-cols-10 grid-rows-17">
                 <!-- 170 cells will be dynamically injected here for visual/debug references -->
             </div>
 
-            <!-- SVGs Trails Render Container -->
-            <svg id="trails-svg-container" class="absolute inset-0 w-full h-full pointer-events-none z-10">
+            <!-- SVGs Trails Render Container (Hidden by default to player, visible only on dev option) -->
+            <svg id="trails-svg-container" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="display: none;">
                 <!-- Predefined trails as neon glowing stroke paths -->
             </svg>
 
@@ -147,7 +147,7 @@
             </div>
 
             <!-- Floating Center Princess Cage -->
-            <div id="princess-container" class="absolute w-[100px] h-[100px] flex flex-col items-center justify-center princess-float z-30 transition-all duration-500" style="left: 145px; top: 220px;">
+            <div id="princess-container" class="absolute w-[100px] h-[100px] flex flex-col items-center justify-center princess-float z-30 transition-all duration-500" style="left: 145px; top: 160px;">
                 <!-- Locked Cage Graphic -->
                 <div id="princess-cage" class="relative w-16 h-16 bg-[#2d324d] border-2 border-slate-500 rounded-lg flex items-center justify-center shadow-xl">
                     <!-- Cage Bars -->
@@ -169,9 +169,8 @@
         </div>
 
 
-        <!-- ==================== ACTIVE SLOTS TRAY (100px) ==================== -->
+        <!-- ==================== ACTIVE SLOTS TRAY (90px) ==================== -->
         <div class="active-slots-tray w-full flex items-center justify-around px-2 relative">
-            <!-- 5 active slot pods -->
             <div class="absolute -top-3 left-0 w-full flex justify-center pointer-events-none">
                 <span class="bg-indigo-900 border border-indigo-500/40 text-[9px] uppercase font-bold tracking-wider text-indigo-300 px-2 py-0.5 rounded-full shadow-md">
                     Active Deploy Slots
@@ -187,10 +186,10 @@
         </div>
 
 
-        <!-- ==================== BOX LANES / SUPPLY QUEUE ==================== -->
-        <!-- Placed at the very bottom, supports multiple customizable lanes -->
-        <div id="box-lanes-container" class="w-full bg-[#090c21] p-3 border-t border-indigo-950 flex flex-col space-y-2 justify-center items-center z-40 min-h-[90px] max-h-[140px] overflow-y-auto">
-            <!-- Dynamic box lanes injected by Level designer -->
+        <!-- ==================== BOX COLUMNS / SOLITAIRE SUPPLY QUEUE ==================== -->
+        <!-- Vertical columns of troop boxes. Players can only tap the bottom-most (first exposed) box in each column. -->
+        <div id="box-columns-container" class="w-full bg-[#090c21] p-3 border-t border-indigo-950 flex space-x-4 justify-center items-end z-40 h-[154px] overflow-x-auto">
+            <!-- Dynamic vertical columns injected here by Level designer -->
         </div>
 
     </div>
@@ -261,7 +260,7 @@
         </div>
 
         <div class="text-center text-[10px] text-gray-500">
-            "Not a RPG" Prototype v1.1.0 • Designed by Desi
+            "Not a RPG" Prototype v1.2.0 • Designed by Desi
         </div>
     </div>
 
@@ -311,8 +310,8 @@
                 <input type="checkbox" id="dev-show-grid" onchange="toggleGridOutline()" class="rounded bg-indigo-950 border-indigo-800 text-purple-600">
             </div>
             <div class="flex items-center justify-between text-xs">
-                <span class="text-gray-300">Render Path Overlays</span>
-                <input type="checkbox" id="dev-show-paths" checked onchange="togglePathOverlays()" class="rounded bg-indigo-950 border-indigo-800 text-purple-600">
+                <span class="text-gray-300">Show Surprising Path Overlays</span>
+                <input type="checkbox" id="dev-show-paths" onchange="togglePathOverlays()" class="rounded bg-indigo-950 border-indigo-800 text-purple-600">
             </div>
         </div>
 
@@ -391,7 +390,7 @@
                 heroIcon: "🥷",
                 enemyName: "Black Troll",
                 enemyIcon: "🪓",
-                colorCode: "#000000",
+                colorCode: "#888888",
                 portalX: 9, // slot 4 maps to x=9
             }
         };
@@ -406,15 +405,16 @@
                     { id: 'ec_green_1', color: 'green', x: 7, y: 4, count: 3, maxCount: 3 }
                 ],
                 paths: {
-                    // Start slot maps to start coordinate of path
-                    // Slot 0 (x:1) connects to Red
                     red: [{x: 1, y: 15}, {x: 1, y: 3}, {x: 2, y: 3}],
-                    // Slot 1 (x:3) connects to Green
                     green: [{x: 3, y: 15}, {x: 3, y: 4}, {x: 7, y: 4}]
                 },
-                boxLanes: [
+                // Vertical columns of troop boxes (Mahjong Solitaire layout)
+                // First element is at the bottom (exposed/playable), later elements sit behind (dimmed)
+                boxColumns: [
                     [
-                        { color: 'red', count: 2, uid: 'b1' },
+                        { color: 'red', count: 2, uid: 'b1' }
+                    ],
+                    [
                         { color: 'green', count: 3, uid: 'b2' }
                     ]
                 ]
@@ -427,14 +427,14 @@
                     { id: 'ec_green_2', color: 'green', x: 7, y: 3, count: 3, maxCount: 3 }
                 ],
                 paths: {
-                    // Trails cross at (5, 7)
                     red: [{x: 1, y: 15}, {x: 1, y: 7}, {x: 8, y: 7}, {x: 8, y: 3}, {x: 2, y: 3}],
                     green: [{x: 3, y: 15}, {x: 3, y: 9}, {x: 5, y: 9}, {x: 5, y: 3}, {x: 7, y: 3}]
                 },
-                boxLanes: [
+                boxColumns: [
                     [
-                        { color: 'red', count: 3, uid: 'b3' },
-                        { color: 'green', count: 3, uid: 'b4' }
+                        // Green box is behind/under Red! Red must be cleared/tapped first
+                        { color: 'green', count: 3, uid: 'b4' },
+                        { color: 'red', count: 3, uid: 'b3' }
                     ]
                 ]
             },
@@ -447,15 +447,17 @@
                     { id: 'ec_blue_3', color: 'blue', x: 9, y: 3, count: 2, maxCount: 2 }
                 ],
                 paths: {
-                    // Visual crossings
                     red: [{x: 1, y: 15}, {x: 1, y: 10}, {x: 5, y: 10}, {x: 5, y: 5}, {x: 1, y: 5}, {x: 1, y: 3}],
                     green: [{x: 3, y: 15}, {x: 3, y: 8}, {x: 7, y: 8}, {x: 7, y: 3}, {x: 5, y: 3}],
                     blue: [{x: 5, y: 15}, {x: 5, y: 12}, {x: 9, y: 12}, {x: 9, y: 3}]
                 },
-                boxLanes: [
+                boxColumns: [
                     [
-                        { color: 'red', count: 2, uid: 'b5' },
                         { color: 'blue', count: 2, uid: 'b6' },
+                        { color: 'red', count: 2, uid: 'b5' }
+                    ],
+                    [
+                        { color: 'blue', count: 2, uid: 'b15' },
                         { color: 'green', count: 2, uid: 'b7' }
                     ]
                 ]
@@ -471,10 +473,14 @@
                     yellow: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 2, y: 10}, {x: 2, y: 3}],
                     black: [{x: 9, y: 15}, {x: 9, y: 8}, {x: 4, y: 8}, {x: 4, y: 5}, {x: 7, y: 5}]
                 },
-                boxLanes: [
+                boxColumns: [
                     [
                         { color: 'yellow', count: 3, uid: 'b8' },
                         { color: 'black', count: 4, uid: 'b9' }
+                    ],
+                    [
+                        { color: 'black', count: 4, uid: 'b16' },
+                        { color: 'yellow', count: 3, uid: 'b17' }
                     ]
                 ]
             },
@@ -495,15 +501,18 @@
                     yellow: [{x: 7, y: 15}, {x: 7, y: 12}, {x: 9, y: 12}, {x: 9, y: 7}, {x: 7, y: 7}, {x: 7, y: 3}],
                     black: [{x: 9, y: 15}, {x: 9, y: 9}, {x: 9, y: 3}]
                 },
-                boxLanes: [
+                boxColumns: [
                     [
                         { color: 'red', count: 2, uid: 'b10' },
-                        { color: 'green', count: 2, uid: 'b11' },
                         { color: 'blue', count: 2, uid: 'b12' }
                     ],
                     [
-                        { color: 'yellow', count: 2, uid: 'b13' },
-                        { color: 'black', count: 2, uid: 'b14' }
+                        { color: 'green', count: 2, uid: 'b11' },
+                        { color: 'yellow', count: 2, uid: 'b13' }
+                    ],
+                    [
+                        { color: 'black', count: 2, uid: 'b14' },
+                        { color: 'red', count: 2, uid: 'b18' }
                     ]
                 ]
             }
@@ -558,7 +567,7 @@
         // Load level parameters
         function loadLevel(levelIndex) {
             currentLevelIndex = levelIndex;
-            const level = LEVELS[levelIndex];
+            const level = JSON.parse(JSON.stringify(LEVELS[levelIndex])); // Deep copy to prevent mutating the original templates
             logDev(`Loading level ${level.id}: ${level.name}`);
 
             // HUD updates
@@ -584,8 +593,8 @@
             // Draw Portals, Enemy Camps, and Princess Cage
             drawStaticEntities(level);
 
-            // Re-render Box supply queue
-            renderBoxLanes(level);
+            // Re-render Box supply columns
+            renderBoxColumns(level);
 
             // Redraw Paths in SVG
             drawSVGPaths(level);
@@ -607,7 +616,6 @@
                 // Create stroke path
                 let pathD = "";
                 path.forEach((pt, idx) => {
-                    // Center coordinates of cell
                     const pixelX = pt.x * CELL_SIZE + CELL_SIZE / 2;
                     const pixelY = pt.y * CELL_SIZE + CELL_SIZE / 2;
                     if (idx === 0) {
@@ -647,9 +655,7 @@
             const layer = document.getElementById('entities-layer');
 
             // Draw portals at the bottom mapping to the Slots
-            // A portal on board sits at (1 + slotIndex * 2, 15)
             for (let i = 0; i < 5; i++) {
-                // Find color mapping
                 const color = getColorForSlot(i, level);
                 if (!color) continue;
                 const config = CLASS_CONFIGS[color];
@@ -679,7 +685,7 @@
                 campDiv.style.width = `${CELL_SIZE}px`;
                 campDiv.style.height = `${CELL_SIZE * 2}px`;
                 campDiv.style.left = `${camp.x * CELL_SIZE}px`;
-                campDiv.style.top = `${(camp.y - 1) * CELL_SIZE}px`; // Occupies grid cell
+                campDiv.style.top = `${(camp.y - 1) * CELL_SIZE}px`;
 
                 // Stack rendering
                 updateCampStackVisual(campDiv, camp);
@@ -689,7 +695,6 @@
 
         // Helper to find slot index for a color
         function getColorForSlot(slotIndex, level) {
-            // Find which path start matches this slot coordinate (1 + slotIndex*2)
             const targetX = 1 + slotIndex * 2;
             for (const [color, path] of Object.entries(level.paths)) {
                 if (path[0].x === targetX && path[0].y === 15) {
@@ -718,13 +723,13 @@
                 charEl.className = "w-7 h-7 flex items-center justify-center text-base rounded shadow-md transition-all duration-300 transform";
                 charEl.style.backgroundColor = config.colorCode + "90";
                 charEl.style.border = `1.5px solid ${config.colorCode}`;
-                charEl.style.marginBottom = "-12px"; // overlaps vertically to form a stack
+                charEl.style.marginBottom = "-12px";
                 charEl.style.zIndex = 10 + i;
                 charEl.innerHTML = config.enemyIcon;
                 container.appendChild(charEl);
             }
 
-            // If empty, draw a ruins icon
+            // If empty, draw ruins
             if (camp.count <= 0) {
                 container.innerHTML = `<span class="text-xs text-gray-600">🪨</span>`;
             }
@@ -739,7 +744,6 @@
 
                 const boxData = activeSlots[i];
                 if (boxData) {
-                    // Render Troop Box placed inside this active slot
                     const config = CLASS_CONFIGS[boxData.color];
                     
                     const boxEl = document.createElement('div');
@@ -747,20 +751,17 @@
                     boxEl.style.backgroundColor = config.colorCode;
                     boxEl.style.boxShadow = `0 4px 10px ${config.colorCode}60`;
 
-                    // Hero character icon preview
                     const icon = document.createElement('span');
                     icon.className = "text-xl leading-none";
                     icon.textContent = config.heroIcon;
                     boxEl.appendChild(icon);
 
-                    // Counter badge on box
                     const badge = document.createElement('span');
                     badge.className = "absolute -top-1.5 -right-1.5 bg-yellow-500 text-[10px] text-black font-bold w-5 h-5 rounded-full border-2 border-white flex items-center justify-center";
                     badge.id = `slot-count-${i}`;
                     badge.textContent = boxData.count;
                     boxEl.appendChild(badge);
 
-                    // Add custom block state warning
                     const blockIndicator = document.createElement('span');
                     blockIndicator.id = `slot-block-${i}`;
                     blockIndicator.className = "hidden absolute -bottom-1 bg-red-600 text-[8px] text-white font-bold px-1 rounded shadow border border-red-400";
@@ -773,48 +774,71 @@
             }
         }
 
-        // Render troop queue at the bottom
-        function renderBoxLanes(level) {
-            const container = document.getElementById('box-lanes-container');
+        // Render troop queue arranged in VERTICAL COLUMNS (like Solitaire)
+        // Player can only tap the bottom-most/first-exposed box (last item in column array)
+        let levelState = null; // Storing active level state including mutated columns
+        
+        function renderBoxColumns(level) {
+            levelState = level; // Preserve active reference
+            const container = document.getElementById('box-columns-container');
             container.innerHTML = '';
 
-            level.boxLanes.forEach((lane, laneIdx) => {
-                const laneEl = document.createElement('div');
-                laneEl.className = "flex space-x-3 justify-center items-center";
+            levelState.boxColumns.forEach((column, colIdx) => {
+                const colEl = document.createElement('div');
+                colEl.className = "flex flex-col-reverse items-center justify-end space-y-reverse -space-y-6 relative h-[130px] w-14";
 
-                lane.forEach(box => {
+                // Map column and render
+                column.forEach((box, bIdx) => {
                     const config = CLASS_CONFIGS[box.color];
+                    const isExposed = (bIdx === column.length - 1); // Only the top/last element in column is exposed!
+
+                    // Create box element
+                    const boxEl = document.createElement('div');
+                    boxEl.id = `box-el-${box.uid}`;
                     
-                    // Create box button
-                    const boxBtn = document.createElement('button');
-                    boxBtn.id = `box-btn-${box.uid}`;
-                    boxBtn.onclick = () => tapTroopBox(box, laneIdx);
-                    boxBtn.className = "w-12 h-12 rounded-xl flex flex-col items-center justify-center text-white relative shadow-lg transform active:scale-95 transition-all duration-150 border-b-4";
-                    boxBtn.style.backgroundColor = config.colorCode;
-                    boxBtn.style.borderColor = adjustColorBrightness(config.colorCode, -30);
+                    if (isExposed) {
+                        boxEl.onclick = () => tapTroopBox(box, colIdx);
+                        boxEl.className = "w-12 h-12 rounded-xl flex flex-col items-center justify-center text-white relative shadow-lg transform active:scale-95 transition-all duration-150 border-b-4 cursor-pointer";
+                        boxEl.style.backgroundColor = config.colorCode;
+                        boxEl.style.borderColor = adjustColorBrightness(config.colorCode, -35);
+                        boxEl.style.zIndex = 20 + bIdx;
+                    } else {
+                        // Dimmed / locked box behind
+                        boxEl.className = "w-12 h-12 rounded-xl flex flex-col items-center justify-center text-white relative shadow border-b-4 opacity-45 pointer-events-none filter saturate-50";
+                        boxEl.style.backgroundColor = adjustColorBrightness(config.colorCode, -25);
+                        boxEl.style.borderColor = adjustColorBrightness(config.colorCode, -45);
+                        boxEl.style.zIndex = 10 + bIdx;
+                    }
 
                     // Character Icon
                     const icon = document.createElement('span');
                     icon.className = "text-xl leading-none mb-0.5";
                     icon.textContent = config.heroIcon;
-                    boxBtn.appendChild(icon);
+                    boxEl.appendChild(icon);
 
                     // Count Badge
                     const badge = document.createElement('span');
                     badge.className = "absolute -top-1.5 -right-1.5 bg-yellow-400 text-black text-[9px] font-bold w-4 h-4 rounded-full border border-white flex items-center justify-center";
                     badge.textContent = box.count;
-                    boxBtn.appendChild(badge);
+                    boxEl.appendChild(badge);
 
-                    laneEl.appendChild(boxBtn);
+                    // If locked, show a subtle lock emblem
+                    if (!isExposed) {
+                        const lockIco = document.createElement('span');
+                        lockIco.className = "absolute text-[9px] text-white/75 bg-black/60 px-0.5 rounded -bottom-1 scale-90";
+                        lockIco.textContent = "🔒";
+                        boxEl.appendChild(lockIco);
+                    }
+
+                    colEl.appendChild(boxEl);
                 });
 
-                container.appendChild(laneEl);
+                container.appendChild(colEl);
             });
         }
 
         // Tap a troop box to send it to the Active Slots
-        function tapTroopBox(box, laneIdx) {
-            // Find empty slot
+        function tapTroopBox(box, colIdx) {
             const emptyIdx = activeSlots.indexOf(null);
             if (emptyIdx === -1) {
                 logDev("No active slots available! Free up slots first.");
@@ -827,36 +851,25 @@
                 count: box.count,
                 initialCount: box.count,
                 uid: box.uid,
-                spawnedCount: 0, // Number of heroes spawned from this box currently
+                spawnedCount: 0,
                 slotIndex: emptyIdx
             };
 
-            // Remove box from bottom queue visually/internally
-            const level = LEVELS[currentLevelIndex];
-            level.boxLanes[laneIdx] = level.boxLanes[laneIdx].filter(b => b.uid !== box.uid);
+            // Remove box from column supply
+            levelState.boxColumns[colIdx] = levelState.boxColumns[colIdx].filter(b => b.uid !== box.uid);
             
             logDev(`Tapped ${box.color} box. Flying to Active Slot ${emptyIdx}`);
             
             // Re-render
             renderSlotsTray();
-            renderBoxLanes(level);
-
-            // Play flying animation reference
-            triggerFlyingAnimation(box.uid, emptyIdx);
+            renderBoxColumns(levelState);
 
             // Force pathing evaluation
             evaluatePathStates();
         }
 
-        // Pure JS CSS transform-based flying effect
-        function triggerFlyingAnimation(boxUid, slotIdx) {
-            // Simulated flying animation directly updating logs/states
-        }
-
         // Evaluate topological pathing states and set BLOCKED badges
         function evaluatePathStates() {
-            const level = LEVELS[currentLevelIndex];
-            
             // 1. Determine active paths based on color
             let activeColors = [];
             activeSlots.forEach(slot => {
@@ -869,10 +882,9 @@
                 if (!slot) continue;
 
                 const color = slot.color;
-                const path = level.paths[color];
+                const path = levelState.paths[color];
                 if (!path) continue;
 
-                // Check if our path intersects with ANY path that is currently "Marching"
                 let isBlocked = false;
 
                 // Loop other active slots
@@ -881,14 +893,12 @@
                     const otherSlot = activeSlots[j];
                     if (!otherSlot) continue;
 
-                    // If other path is active, check intersection
                     const otherColor = otherSlot.color;
-                    const otherPath = level.paths[otherColor];
+                    const otherPath = levelState.paths[otherColor];
                     if (!otherPath) continue;
 
-                    // If they overlap, and the other is ALREADY marching (or has smaller slot index / was activated earlier)
+                    // If they overlap, and the other is ALREADY marching (or has smaller slot index)
                     if (pathsIntersect(path, otherPath)) {
-                        // Priority rule: earlier slot index or active marching heroes has priority
                         const hasMarchingHeroes = activeHeroes.some(h => h.color === otherColor);
                         if (hasMarchingHeroes || j < i) {
                             isBlocked = true;
@@ -922,9 +932,8 @@
         function pathsIntersect(p1, p2) {
             for (const pt1 of p1) {
                 for (const pt2 of p2) {
-                    // Do not block on starting portals or ending portals if they align
+                    // Overlaps in the gameplay grid
                     if (pt1.x === pt2.x && pt1.y === pt2.y) {
-                        // If they intersect in the middle of paths
                         if (pt1.y !== 15 && pt1.y !== 3) {
                             return true;
                         }
@@ -936,16 +945,11 @@
 
         // Check if all slots are full and blocked -> fail state!
         function checkFailState() {
-            const level = LEVELS[currentLevelIndex];
-            
-            // Slots full?
             const isFull = activeSlots.every(s => s !== null);
             if (!isFull) return;
 
-            // Are all slots currently blocked and no heroes are active?
             const noActiveHeroes = activeHeroes.length === 0;
             
-            // Check if every slot has the "BLOCKED" badge active
             let allBlocked = true;
             for (let i = 0; i < 5; i++) {
                 const badge = document.getElementById(`slot-block-${i}`);
@@ -969,34 +973,28 @@
 
         // Spawn a hero
         function spawnHero(slot) {
-            const level = LEVELS[currentLevelIndex];
             const color = slot.color;
-            const path = level.paths[color];
+            const path = levelState.paths[color];
             const config = CLASS_CONFIGS[color];
 
             slot.spawnedCount++; // track active spawned
             
-            // Find target enemy camp coord
-            const enemyCamp = level.enemyCamps.find(c => c.color === color);
-            
-            // Create hero entity visual object
             const hero = {
                 id: `hero-${Date.now()}-${Math.random()}`,
                 color: color,
-                path: [...path], // copy coordinates
+                path: [...path],
                 currentPathIndex: 0,
                 x: path[0].x,
                 y: path[0].y,
                 pixelX: path[0].x * CELL_SIZE,
                 pixelY: path[0].y * CELL_SIZE,
-                state: 'marching_up', // marching_up, battle, marching_down, done
+                state: 'marching_up',
                 battleTimer: 0,
                 boxUid: slot.uid,
                 slotIndex: slot.slotIndex,
                 domEl: null
             };
 
-            // Render Hero on screen
             const layer = document.getElementById('entities-layer');
             const heroDiv = document.createElement('div');
             heroDiv.id = hero.id;
@@ -1014,31 +1012,25 @@
             logDev(`[SPAWN] ${config.heroName} emerged from slot ${slot.slotIndex}`);
         }
 
-        // Main game ticker at 30/60 fps
+        // Main game ticker
         let lastTime = 0;
         function gameTick(timestamp) {
             const elapsed = timestamp - lastTime;
-            
-            // Run state logic every ~150ms for smooth step movement
             if (elapsed > 180) {
                 lastTime = timestamp;
                 updateHeroesMovement();
                 updateCoinsMovement();
             }
-
             requestAnimationFrame(gameTick);
         }
 
         // Hero state machine updates
         function updateHeroesMovement() {
-            const level = LEVELS[currentLevelIndex];
-
             for (let i = activeHeroes.length - 1; i >= 0; i--) {
                 const hero = activeHeroes[i];
                 const config = CLASS_CONFIGS[hero.color];
 
                 if (hero.state === 'marching_up') {
-                    // Walk up predefined trail
                     hero.currentPathIndex++;
                     if (hero.currentPathIndex < hero.path.length) {
                         const nextPt = hero.path[hero.currentPathIndex];
@@ -1048,16 +1040,13 @@
                         hero.pixelY = hero.y * CELL_SIZE;
                         updateHeroDOMPosition(hero);
                     } else {
-                        // Reached the destination enemy camp! Initiate 1-second battle pause
                         hero.state = 'battle';
-                        hero.battleTimer = 6; // ~1 second (6 ticks of 180ms)
+                        hero.battleTimer = 6; // ~1 second clashing combat pause
                         logDev(`[BATTLE] ${config.heroName} engaged battle at enemy camp`);
-                        triggerBattleEffects(hero);
                     }
                 } 
                 else if (hero.state === 'battle') {
                     hero.battleTimer--;
-                    // Visual clashing sword flicker
                     if (hero.battleTimer % 2 === 0) {
                         hero.domEl.style.filter = "brightness(2)";
                     } else {
@@ -1065,36 +1054,28 @@
                     }
 
                     if (hero.battleTimer <= 0) {
-                        // Battle completed!
                         hero.domEl.style.filter = "none";
                         
-                        // Decrement enemy camp count
-                        const enemyCamp = level.enemyCamps.find(c => c.color === hero.color);
+                        const enemyCamp = levelState.enemyCamps.find(c => c.color === hero.color);
                         if (enemyCamp && enemyCamp.count > 0) {
                             enemyCamp.count--;
                             
-                            // Visual update for the camp stack
                             const campDiv = document.getElementById(`camp-${enemyCamp.id}`);
                             if (campDiv) updateCampStackVisual(campDiv, enemyCamp);
 
-                            // Create spinning gold coin visual dragging behind the hero
                             spawnCoin(hero);
 
-                            // Progress lock count
                             completedEnemies++;
                             updatePrincessLock();
 
-                            // Set state to walk back down with coin
                             hero.state = 'marching_down';
                             logDev(`[LOOT] Enemy defeated! Gold coin spawned.`);
                         } else {
-                            // Camp was already empty
                             hero.state = 'marching_down';
                         }
                     }
                 } 
                 else if (hero.state === 'marching_down') {
-                    // Walk back down to start portal
                     hero.currentPathIndex--;
                     if (hero.currentPathIndex >= 0) {
                         const prevPt = hero.path[hero.currentPathIndex];
@@ -1104,40 +1085,34 @@
                         hero.pixelY = hero.y * CELL_SIZE;
                         updateHeroDOMPosition(hero);
                     } else {
-                        // Reached the active slot! Deposit loot and terminate
                         hero.state = 'done';
                         logDev(`[DEPOSIT] ${config.heroName} deposited loot!`);
                         
-                        // Increment coins HUD
                         playerCoins += 10;
                         const coinsHud = document.getElementById('hud-coins');
                         coinsHud.textContent = playerCoins;
                         coinsHud.classList.add('coin-collecting');
                         setTimeout(() => coinsHud.classList.remove('coin-collecting'), 400);
 
-                        // Decrement Troop box count
                         const slot = activeSlots[hero.slotIndex];
                         if (slot) {
                             slot.count--;
                             slot.spawnedCount = Math.max(0, slot.spawnedCount - 1);
                             
-                            // Re-render slot visual counters
                             const counterEl = document.getElementById(`slot-count-${hero.slotIndex}`);
                             if (counterEl) counterEl.textContent = slot.count;
 
                             if (slot.count <= 0) {
-                                // Box fully cleared! Clear active slot
                                 activeSlots[hero.slotIndex] = null;
                                 logDev(`[CLEARED] Slot ${hero.slotIndex} fully cleared!`);
                                 renderSlotsTray();
                             }
                         }
 
-                        // Remove hero visual element
                         hero.domEl.remove();
                         activeHeroes.splice(i, 1);
 
-                        // Force evaluate pathing as paths opened up
+                        // Recalculate states
                         evaluatePathStates();
                     }
                 }
@@ -1181,16 +1156,13 @@
         function updateCoinsMovement() {
             for (let i = activeCoins.length - 1; i >= 0; i--) {
                 const coin = activeCoins[i];
-                // Find matching hero
                 const hero = activeHeroes.find(h => h.id === coin.heroId);
                 if (hero && hero.state === 'marching_down') {
-                    // Follow hero drag coordinate
                     coin.pixelX = hero.pixelX;
                     coin.pixelY = hero.pixelY;
                     coin.domEl.style.left = `${coin.pixelX + 12}px`;
                     coin.domEl.style.top = `${coin.pixelY + 12}px`;
                 } else {
-                    // Hero reached slot and was removed
                     coin.domEl.remove();
                     activeCoins.splice(i, 1);
                 }
@@ -1205,7 +1177,6 @@
             if (countEl) countEl.textContent = Math.max(0, remaining);
 
             if (remaining <= 0) {
-                // Rescue completed! Unlocked bars
                 const cage = document.getElementById('princess-cage');
                 cage.classList.remove('border-slate-500');
                 cage.classList.add('border-yellow-500', 'bg-yellow-900/30');
@@ -1223,21 +1194,6 @@
         // Trigger Win Overlay
         function triggerWinState() {
             document.getElementById('win-modal').classList.remove('hidden');
-        }
-
-        // Pop sparkly stars during battle
-        function triggerBattleEffects(hero) {
-            // Particle sparkles reference
-        }
-
-        // Helper to adjust hex colors brightness
-        function adjustColorBrightness(hex, percent) {
-            let num = parseInt(hex.replace("#",""),16),
-            amt = Math.round(2.55 * percent),
-            R = (num >> 16) + amt,
-            G = (num >> 8 & 0x00FF) + amt,
-            B = (num & 0x0000FF) + amt;
-            return "#" + (0x1000000 + (R<255?R<0?0:R:255)*0x10000 + (G<255?G<0?0:G:255)*0x100 + (B<255?B<0?0:B:255)).toString(16).slice(1);
         }
 
         // Developer Logs console printer
