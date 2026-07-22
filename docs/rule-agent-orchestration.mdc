@@ -1,0 +1,45 @@
+---
+description: Independent-review and coordination guardrails for the game pipeline. Applies to every agent session.
+alwaysApply: true
+---
+
+# Agent Orchestration Guardrails
+
+The pipeline runs sequentially. Every step is reviewed by an INDEPENDENT cold agent session — wearing the downstream consumer's hat — before it can advance. These rules keep that independence real and protect shared state. They apply to every agent in this repo.
+
+## Independent review
+
+- Review runs as a **subagent** dispatched by the orchestrator (Task tool), in its own fresh context window with no access to the producer's conversation. A producer never reviews or approves its own work.
+- The orchestrator passes **only** the `review/REQUEST_*.md` allow-list into the reviewer's dispatch prompt — never the producer's output, summary, rationale, or a prior-round verdict. This is the one rule that must not bend: it is the only way independence can leak in the subagent model.
+- The reviewer's only inputs are the request allow-list (the artifact, `downstream-map.md`, named `context/` modules). It comes to the artifact cold.
+- The reviewer writes exactly one file — its `review/VERDICT_*.md`. It edits nothing else: not the artifact, not `context/`, not `_INDEX.md`.
+- Every finding cites the downstream step that motivates it (per `downstream-map.md`). A finding with no future-context justification belongs in the stage skill's own checklist, not a review.
+
+## Handoff-file ownership
+
+- `review/REQUEST_*.md` — written by the orchestrator only.
+- `review/VERDICT_*.md` — written by the reviewer only; read by the orchestrator. Nobody edits a verdict after it's written; a new round means a new request and a new verdict file.
+- `review/REVISION_*.md` — written by the producer on REVISE (the finding→change map). Producer- and human-facing only; it is never added to a reviewer's allow-list, so the cold reviewer never sees it.
+
+## Shared-state ownership
+
+- `context/_INDEX.md` and `context/context_*.md` are orchestrator-owned. Stage and reviewer agents do not write them. A stage skill's "update context" step is deferred to the orchestrator after the output review passes and the gate clears.
+- A stage agent may write its own `PLAN.md` and working files. The reviewer writes only its verdict.
+
+## Gate discipline
+
+- No agent advances past a step whose Gate ledger entry in `_INDEX.md` is `unmet`. Human gates (Figma plugin run, FeatureFlags/AudioMixer config, editor playtest, **device test**, per-layer playtest) are hard stops.
+- Only a human flips a gate to `confirmed` (`gate confirmed <NN>`). Review sign-off is a soft gate and never overrides a human gate.
+
+## Review loop bounds
+
+- Max 2 REVISE rounds per phase, then the orchestrator stops and hands open findings to the human. ESCALATE (a genuine trade-off, not a defect) goes straight to the human — never looped.
+
+## Scope guards (per stage)
+
+- Skin agent (03): visual/CSS/CONFIG layer only — never game logic, Level Editor, or JSON export.
+- Standards agents (07): no behaviour changes; public-symbol renames logged for the serial propagation pass.
+
+## When unsure
+
+If an agent can't tell whether an action touches shared state, crosses a gate, or breaks reviewer/producer independence, it stops and asks the orchestrator.
