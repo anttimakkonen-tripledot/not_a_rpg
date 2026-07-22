@@ -399,23 +399,39 @@
         const LEVELS = [
             {
                 id: 1,
-                name: "Forest Ambushes",
+                name: "Smiley Face Siege",
                 enemyCamps: [
-                    { id: 'ec_red_1', color: 'red', x: 2, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_green_1', color: 'green', x: 7, y: 4, count: 3, maxCount: 3 }
+                    { id: 'ec_red_left_eye', color: 'red_1', x: 2, y: 3, count: 30, maxCount: 30 },
+                    { id: 'ec_red_right_eye', color: 'red_2', x: 7, y: 3, count: 30, maxCount: 30 },
+                    { id: 'ec_green_smile_1', color: 'green_1', x: 2, y: 7, count: 10, maxCount: 10 },
+                    { id: 'ec_green_smile_2', color: 'green_2', x: 3, y: 8, count: 10, maxCount: 10 },
+                    { id: 'ec_green_smile_3', color: 'green_3', x: 4, y: 9, count: 10, maxCount: 10 },
+                    { id: 'ec_green_smile_4', color: 'green_4', x: 5, y: 9, count: 10, maxCount: 10 },
+                    { id: 'ec_green_smile_5', color: 'green_5', x: 6, y: 8, count: 10, maxCount: 10 },
+                    { id: 'ec_green_smile_6', color: 'green_6', x: 7, y: 7, count: 10, maxCount: 10 }
                 ],
                 paths: {
-                    red: [{x: 1, y: 15}, {x: 1, y: 3}, {x: 2, y: 3}],
-                    green: [{x: 3, y: 15}, {x: 3, y: 4}, {x: 7, y: 4}]
+                    red_1: [{x: 1, y: 15}, {x: 1, y: 10}, {x: 3, y: 10}, {x: 5, y: 10}, {x: 5, y: 3}, {x: 2, y: 3}],
+                    red_2: [{x: 9, y: 15}, {x: 9, y: 10}, {x: 7, y: 10}, {x: 4, y: 10}, {x: 4, y: 3}, {x: 7, y: 3}],
+                    green_1: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 3, y: 7}, {x: 2, y: 7}],
+                    green_2: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 3, y: 8}],
+                    green_3: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 4, y: 10}, {x: 4, y: 9}],
+                    green_4: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 5, y: 10}, {x: 5, y: 9}],
+                    green_5: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 7, y: 8}],
+                    green_6: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 7, y: 7}]
                 },
-                // Vertical columns of troop boxes (Mahjong Solitaire layout)
-                // First element is at the bottom (exposed/playable), later elements sit behind (dimmed)
                 boxColumns: [
                     [
-                        { color: 'red', count: 2, uid: 'b1' }
+                        { color: 'green_1', count: 10, uid: 'b1' },
+                        { color: 'green_2', count: 10, uid: 'b2' },
+                        { color: 'green_3', count: 10, uid: 'b3' },
+                        { color: 'red_1', count: 30, uid: 'b4' }
                     ],
                     [
-                        { color: 'green', count: 3, uid: 'b2' }
+                        { color: 'green_4', count: 10, uid: 'b5' },
+                        { color: 'green_5', count: 10, uid: 'b6' },
+                        { color: 'green_6', count: 10, uid: 'b7' },
+                        { color: 'red_2', count: 30, uid: 'b8' }
                     ]
                 ]
             },
@@ -568,6 +584,31 @@
         function loadLevel(levelIndex) {
             currentLevelIndex = levelIndex;
             const level = JSON.parse(JSON.stringify(LEVELS[levelIndex])); // Deep copy to prevent mutating the original templates
+            
+            // Dynamically register sub-colors in CLASS_CONFIGS if they contain underscores
+            level.enemyCamps.forEach(camp => {
+                if (!CLASS_CONFIGS[camp.color] && camp.color.includes('_')) {
+                    const baseColor = camp.color.split('_')[0];
+                    if (CLASS_CONFIGS[baseColor]) {
+                        CLASS_CONFIGS[camp.color] = {
+                            ...CLASS_CONFIGS[baseColor]
+                        };
+                    }
+                }
+            });
+            if (level.paths) {
+                for (const color of Object.keys(level.paths)) {
+                    if (!CLASS_CONFIGS[color] && color.includes('_')) {
+                        const baseColor = color.split('_')[0];
+                        if (CLASS_CONFIGS[baseColor]) {
+                            CLASS_CONFIGS[color] = {
+                                ...CLASS_CONFIGS[baseColor]
+                            };
+                        }
+                    }
+                }
+            }
+
             logDev(`Loading level ${level.id}: ${level.name}`);
 
             // HUD updates

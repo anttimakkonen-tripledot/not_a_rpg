@@ -123,6 +123,26 @@ The puzzle's difficulty and strategy are entirely determined by the level layout
     *   *Strategic Layering:* Stacking boxes vertically allows the designer to create complex dependencies. For example, placing a Green Box underneath/behind a Red Box forces the player to tap and clear the Red Box before they can even access the Green Box!
 *   **Supply Columns Configuration:** The level designer can choose how many **columns** (2 to 5) are displayed.
 
+### 5.1 Handcrafted Levels Database
+
+Below is the list of levels built into the game's prototype database, designed to showcase different aspects of color-sorting, stack-clearing, and path-blocking strategies:
+
+#### Level 1: Smiley Face Siege (The Epic Sorting Battle)
+*   **Concept:** A massive level where enemies are visually arranged into a classic smiley face layout (Eyes + Smile) using Red and Green monster groups.
+*   **Enemies & Camps (120 Total):**
+    *   **Left Eye (`red_1`):** Located at `x: 2, y: 3` with **30** Red Troll Archers.
+    *   **Right Eye (`red_2`):** Located at `x: 7, y: 3` with **30** Red Troll Archers.
+    *   **The Smile (`green_1` to `green_6`):** Six green camps of **10** Green Trolls each forming a symmetrical curve spanning `y: 7` to `y: 9` (from `x: 2` to `x: 7`).
+*   **The Hero Deck (120 Total):**
+    *   Stacked inside **2 Columns** of **4 Boxes each**:
+        *   **Column 1:** `green_1` (10), `green_2` (10), `green_3` (10), locked behind `red_1` (30).
+        *   **Column 2:** `green_4` (10), `green_5` (10), `green_6` (10), locked behind `red_2` (30).
+*   **The Strategy:** Players must first systematically deploy the green archer camps forming the smiley face. This will reveal the Red Warrior boxes sitting at the top of the columns. If players attempt to mix and match active lanes too aggressively, their paths will intersect and block at row `y = 10`, triggering the "No Path to Enemies" Fail State!
+
+#### Level 2: Crossings Core
+*   **Concept:** A compact, two-color puzzle introducing Solitaire stacking dependencies (Green hidden under Red in a single column).
+... (existing levels are stored in code, but here we document the core showcase level).
+
 ---
 
 ## 6. Developer & QA Cheat Overlay
