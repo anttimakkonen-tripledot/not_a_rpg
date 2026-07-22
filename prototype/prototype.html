@@ -51,11 +51,11 @@
         }
 
         .grid-cell-highlight {
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: none; /* Drop grid by default */
         }
 
         .grid-cell-highlight.debug-active {
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Show during DEV mode */
         }
 
         /* Smooth custom animations */
@@ -401,37 +401,38 @@
                 id: 1,
                 name: "Smiley Face Siege",
                 enemyCamps: [
-                    { id: 'ec_red_left_eye', color: 'red_1', x: 2, y: 3, count: 30, maxCount: 30 },
-                    { id: 'ec_red_right_eye', color: 'red_2', x: 7, y: 3, count: 30, maxCount: 30 },
-                    { id: 'ec_green_smile_1', color: 'green_1', x: 2, y: 7, count: 10, maxCount: 10 },
-                    { id: 'ec_green_smile_2', color: 'green_2', x: 3, y: 8, count: 10, maxCount: 10 },
-                    { id: 'ec_green_smile_3', color: 'green_3', x: 4, y: 9, count: 10, maxCount: 10 },
-                    { id: 'ec_green_smile_4', color: 'green_4', x: 5, y: 9, count: 10, maxCount: 10 },
-                    { id: 'ec_green_smile_5', color: 'green_5', x: 6, y: 8, count: 10, maxCount: 10 },
-                    { id: 'ec_green_smile_6', color: 'green_6', x: 7, y: 7, count: 10, maxCount: 10 }
+                    // Left Eye (red_1) - 4 pixels
+                    { id: 'ec_red_left_1', color: 'red_1', x: 2, y: 2, count: 1, maxCount: 1 },
+                    { id: 'ec_red_left_2', color: 'red_1', x: 3, y: 2, count: 1, maxCount: 1 },
+                    { id: 'ec_red_left_3', color: 'red_1', x: 2, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_left_4', color: 'red_1', x: 3, y: 3, count: 1, maxCount: 1 },
+
+                    // Right Eye (red_2) - 4 pixels
+                    { id: 'ec_red_right_1', color: 'red_2', x: 6, y: 2, count: 1, maxCount: 1 },
+                    { id: 'ec_red_right_2', color: 'red_2', x: 7, y: 2, count: 1, maxCount: 1 },
+                    { id: 'ec_red_right_3', color: 'red_2', x: 6, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_right_4', color: 'red_2', x: 7, y: 3, count: 1, maxCount: 1 },
+
+                    // Smile (green_1 to green_6)
+                    { id: 'ec_green_smile_1', color: 'green_1', x: 2, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_green_smile_2', color: 'green_2', x: 3, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_green_smile_3', color: 'green_3', x: 4, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_green_smile_4', color: 'green_4', x: 5, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_green_smile_5', color: 'green_5', x: 6, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_green_smile_6', color: 'green_6', x: 7, y: 7, count: 1, maxCount: 1 }
                 ],
-                paths: {
-                    red_1: [{x: 1, y: 15}, {x: 1, y: 10}, {x: 3, y: 10}, {x: 5, y: 10}, {x: 5, y: 3}, {x: 2, y: 3}],
-                    red_2: [{x: 9, y: 15}, {x: 9, y: 10}, {x: 7, y: 10}, {x: 4, y: 10}, {x: 4, y: 3}, {x: 7, y: 3}],
-                    green_1: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 3, y: 7}, {x: 2, y: 7}],
-                    green_2: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 3, y: 8}],
-                    green_3: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 4, y: 10}, {x: 4, y: 9}],
-                    green_4: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 5, y: 10}, {x: 5, y: 9}],
-                    green_5: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 7, y: 8}],
-                    green_6: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 7, y: 7}]
-                },
                 boxColumns: [
                     [
-                        { color: 'green_1', count: 10, uid: 'b1' },
-                        { color: 'green_2', count: 10, uid: 'b2' },
-                        { color: 'green_3', count: 10, uid: 'b3' },
-                        { color: 'red_1', count: 30, uid: 'b4' }
+                        { color: 'green_1', count: 1, uid: 'b1' },
+                        { color: 'green_2', count: 1, uid: 'b2' },
+                        { color: 'green_3', count: 1, uid: 'b3' },
+                        { color: 'red_1', count: 4, uid: 'b4' }
                     ],
                     [
-                        { color: 'green_4', count: 10, uid: 'b5' },
-                        { color: 'green_5', count: 10, uid: 'b6' },
-                        { color: 'green_6', count: 10, uid: 'b7' },
-                        { color: 'red_2', count: 30, uid: 'b8' }
+                        { color: 'green_4', count: 1, uid: 'b5' },
+                        { color: 'green_5', count: 1, uid: 'b6' },
+                        { color: 'green_6', count: 1, uid: 'b7' },
+                        { color: 'red_2', count: 4, uid: 'b8' }
                     ]
                 ]
             },
@@ -439,18 +440,46 @@
                 id: 2,
                 name: "Crossings Core",
                 enemyCamps: [
-                    { id: 'ec_red_2', color: 'red', x: 2, y: 3, count: 3, maxCount: 3 },
-                    { id: 'ec_green_2', color: 'green', x: 7, y: 3, count: 3, maxCount: 3 }
+                    // Red outer Heart (16 pixels)
+                    { id: 'ec_red_2_1', color: 'red', x: 2, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_2', color: 'red', x: 3, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_3', color: 'red', x: 6, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_4', color: 'red', x: 7, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_5', color: 'red', x: 1, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_6', color: 'red', x: 2, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_7', color: 'red', x: 7, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_8', color: 'red', x: 8, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_9', color: 'red', x: 1, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_10', color: 'red', x: 8, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_11', color: 'red', x: 2, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_12', color: 'red', x: 7, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_13', color: 'red', x: 3, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_14', color: 'red', x: 6, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_15', color: 'red', x: 4, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_2_16', color: 'red', x: 5, y: 8, count: 1, maxCount: 1 },
+                    
+                    // Green inner Heart Core (16 pixels)
+                    { id: 'ec_green_2_1', color: 'green', x: 3, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_2', color: 'green', x: 4, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_3', color: 'green', x: 5, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_4', color: 'green', x: 6, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_5', color: 'green', x: 2, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_6', color: 'green', x: 3, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_7', color: 'green', x: 4, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_8', color: 'green', x: 5, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_9', color: 'green', x: 6, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_10', color: 'green', x: 7, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_11', color: 'green', x: 3, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_12', color: 'green', x: 4, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_13', color: 'green', x: 5, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_14', color: 'green', x: 6, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_15', color: 'green', x: 4, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_green_2_16', color: 'green', x: 5, y: 7, count: 1, maxCount: 1 }
                 ],
-                paths: {
-                    red: [{x: 1, y: 15}, {x: 1, y: 7}, {x: 8, y: 7}, {x: 8, y: 3}, {x: 2, y: 3}],
-                    green: [{x: 3, y: 15}, {x: 3, y: 9}, {x: 5, y: 9}, {x: 5, y: 3}, {x: 7, y: 3}]
-                },
                 boxColumns: [
                     [
-                        // Green box is behind/under Red! Red must be cleared/tapped first
-                        { color: 'green', count: 3, uid: 'b4' },
-                        { color: 'red', count: 3, uid: 'b3' }
+                        { color: 'green', count: 16, uid: 'b2' },
+                        { color: 'red', count: 16, uid: 'b1' }
                     ]
                 ]
             },
@@ -458,23 +487,53 @@
                 id: 3,
                 name: "Triple Danger",
                 enemyCamps: [
-                    { id: 'ec_red_3', color: 'red', x: 1, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_green_3', color: 'green', x: 5, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_blue_3', color: 'blue', x: 9, y: 3, count: 2, maxCount: 2 }
+                    // Outer Red Shield boundary (20 pixels)
+                    { id: 'ec_red_3_1', color: 'red', x: 2, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_2', color: 'red', x: 3, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_3', color: 'red', x: 4, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_4', color: 'red', x: 5, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_5', color: 'red', x: 6, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_6', color: 'red', x: 7, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_7', color: 'red', x: 2, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_8', color: 'red', x: 7, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_9', color: 'red', x: 2, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_10', color: 'red', x: 7, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_11', color: 'red', x: 2, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_12', color: 'red', x: 7, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_13', color: 'red', x: 2, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_14', color: 'red', x: 7, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_15', color: 'red', x: 3, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_16', color: 'red', x: 6, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_17', color: 'red', x: 4, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_18', color: 'red', x: 5, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_19', color: 'red', x: 4, y: 10, count: 1, maxCount: 1 },
+                    { id: 'ec_red_3_20', color: 'red', x: 5, y: 10, count: 1, maxCount: 1 },
+                    
+                    // Inner Yellow layer (12 pixels)
+                    { id: 'ec_yellow_3_1', color: 'yellow', x: 3, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_2', color: 'yellow', x: 4, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_3', color: 'yellow', x: 5, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_4', color: 'yellow', x: 6, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_5', color: 'yellow', x: 3, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_6', color: 'yellow', x: 6, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_7', color: 'yellow', x: 3, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_8', color: 'yellow', x: 6, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_9', color: 'yellow', x: 3, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_10', color: 'yellow', x: 4, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_11', color: 'yellow', x: 5, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_3_12', color: 'yellow', x: 6, y: 7, count: 1, maxCount: 1 },
+                    
+                    // Blue Gem core (4 pixels)
+                    { id: 'ec_blue_3_1', color: 'blue', x: 4, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_blue_3_2', color: 'blue', x: 5, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_blue_3_3', color: 'blue', x: 4, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_blue_3_4', color: 'blue', x: 5, y: 6, count: 1, maxCount: 1 }
                 ],
-                paths: {
-                    red: [{x: 1, y: 15}, {x: 1, y: 10}, {x: 5, y: 10}, {x: 5, y: 5}, {x: 1, y: 5}, {x: 1, y: 3}],
-                    green: [{x: 3, y: 15}, {x: 3, y: 8}, {x: 7, y: 8}, {x: 7, y: 3}, {x: 5, y: 3}],
-                    blue: [{x: 5, y: 15}, {x: 5, y: 12}, {x: 9, y: 12}, {x: 9, y: 3}]
-                },
                 boxColumns: [
                     [
-                        { color: 'blue', count: 2, uid: 'b6' },
-                        { color: 'red', count: 2, uid: 'b5' }
-                    ],
-                    [
-                        { color: 'blue', count: 2, uid: 'b15' },
-                        { color: 'green', count: 2, uid: 'b7' }
+                        { color: 'blue', count: 4, uid: 'b3' },
+                        { color: 'yellow', count: 12, uid: 'b2' },
+                        { color: 'red', count: 20, uid: 'b1' }
                     ]
                 ]
             },
@@ -482,21 +541,48 @@
                 id: 4,
                 name: "Shadow Matrix",
                 enemyCamps: [
-                    { id: 'ec_yellow_4', color: 'yellow', x: 2, y: 3, count: 3, maxCount: 3 },
-                    { id: 'ec_black_4', color: 'black', x: 7, y: 5, count: 4, maxCount: 4 }
+                    // Yellow side (15 pixels)
+                    { id: 'ec_yellow_4_1', color: 'yellow', x: 3, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_2', color: 'yellow', x: 6, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_3', color: 'yellow', x: 2, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_4', color: 'yellow', x: 6, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_5', color: 'yellow', x: 7, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_6', color: 'yellow', x: 5, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_7', color: 'yellow', x: 6, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_8', color: 'yellow', x: 7, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_9', color: 'yellow', x: 5, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_10', color: 'yellow', x: 6, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_11', color: 'yellow', x: 7, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_12', color: 'yellow', x: 4, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_13', color: 'yellow', x: 5, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_14', color: 'yellow', x: 6, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_4_15', color: 'yellow', x: 7, y: 7, count: 1, maxCount: 1 },
+                    
+                    // Black side (15 pixels)
+                    { id: 'ec_black_4_1', color: 'black', x: 4, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_2', color: 'black', x: 5, y: 3, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_3', color: 'black', x: 3, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_4', color: 'black', x: 4, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_5', color: 'black', x: 5, y: 4, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_6', color: 'black', x: 2, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_7', color: 'black', x: 3, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_8', color: 'black', x: 4, y: 5, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_9', color: 'black', x: 2, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_10', color: 'black', x: 3, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_11', color: 'black', x: 4, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_12', color: 'black', x: 2, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_13', color: 'black', x: 3, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_14', color: 'black', x: 2, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_black_4_15', color: 'black', x: 3, y: 8, count: 1, maxCount: 1 }
                 ],
-                paths: {
-                    yellow: [{x: 7, y: 15}, {x: 7, y: 10}, {x: 2, y: 10}, {x: 2, y: 3}],
-                    black: [{x: 9, y: 15}, {x: 9, y: 8}, {x: 4, y: 8}, {x: 4, y: 5}, {x: 7, y: 5}]
-                },
                 boxColumns: [
                     [
-                        { color: 'yellow', count: 3, uid: 'b8' },
-                        { color: 'black', count: 4, uid: 'b9' }
+                        { color: 'yellow', count: 15, uid: 'b2' },
+                        { color: 'black', count: 15, uid: 'b1' }
                     ],
                     [
-                        { color: 'black', count: 4, uid: 'b16' },
-                        { color: 'yellow', count: 3, uid: 'b17' }
+                        { color: 'black', count: 15, uid: 'b4' },
+                        { color: 'yellow', count: 15, uid: 'b3' }
                     ]
                 ]
             },
@@ -504,31 +590,54 @@
                 id: 5,
                 name: "Ultimate Raid",
                 enemyCamps: [
-                    { id: 'ec_red_5', color: 'red', x: 1, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_green_5', color: 'green', x: 3, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_blue_5', color: 'blue', x: 5, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_yellow_5', color: 'yellow', x: 7, y: 3, count: 2, maxCount: 2 },
-                    { id: 'ec_black_5', color: 'black', x: 9, y: 3, count: 2, maxCount: 2 }
+                    // Shadow Base (Black - 6 pixels)
+                    { id: 'ec_black_5_1', color: 'black', x: 2, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_black_5_2', color: 'black', x: 3, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_black_5_3', color: 'black', x: 4, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_black_5_4', color: 'black', x: 5, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_black_5_5', color: 'black', x: 6, y: 9, count: 1, maxCount: 1 },
+                    { id: 'ec_black_5_6', color: 'black', x: 7, y: 9, count: 1, maxCount: 1 },
+                    
+                    // Gold Frame (Yellow - 11 pixels)
+                    { id: 'ec_yellow_5_1', color: 'yellow', x: 1, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_2', color: 'yellow', x: 8, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_3', color: 'yellow', x: 1, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_4', color: 'yellow', x: 3, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_5', color: 'yellow', x: 5, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_6', color: 'yellow', x: 8, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_7', color: 'yellow', x: 2, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_8', color: 'yellow', x: 4, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_9', color: 'yellow', x: 6, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_10', color: 'yellow', x: 7, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_yellow_5_11', color: 'yellow', x: 4, y: 4, count: 1, maxCount: 1 },
+                    
+                    // Velvet Velvet (Red - 12 pixels)
+                    { id: 'ec_red_5_1', color: 'red', x: 2, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_2', color: 'red', x: 3, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_3', color: 'red', x: 4, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_4', color: 'red', x: 5, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_5', color: 'red', x: 6, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_6', color: 'red', x: 7, y: 8, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_7', color: 'red', x: 2, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_8', color: 'red', x: 4, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_9', color: 'red', x: 6, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_10', color: 'red', x: 7, y: 7, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_11', color: 'red', x: 3, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_red_5_12', color: 'red', x: 5, y: 6, count: 1, maxCount: 1 },
+                    
+                    // Sapphire Gems (Blue - 3 pixels)
+                    { id: 'ec_blue_5_1', color: 'blue', x: 1, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_blue_5_2', color: 'blue', x: 8, y: 6, count: 1, maxCount: 1 },
+                    { id: 'ec_blue_5_3', color: 'blue', x: 4, y: 5, count: 1, maxCount: 1 }
                 ],
-                paths: {
-                    red: [{x: 1, y: 15}, {x: 1, y: 12}, {x: 3, y: 12}, {x: 3, y: 7}, {x: 1, y: 7}, {x: 1, y: 3}],
-                    green: [{x: 3, y: 15}, {x: 3, y: 10}, {x: 5, y: 10}, {x: 5, y: 3}, {x: 3, y: 3}],
-                    blue: [{x: 5, y: 15}, {x: 5, y: 8}, {x: 7, y: 8}, {x: 7, y: 5}, {x: 5, y: 5}, {x: 5, y: 3}],
-                    yellow: [{x: 7, y: 15}, {x: 7, y: 12}, {x: 9, y: 12}, {x: 9, y: 7}, {x: 7, y: 7}, {x: 7, y: 3}],
-                    black: [{x: 9, y: 15}, {x: 9, y: 9}, {x: 9, y: 3}]
-                },
                 boxColumns: [
                     [
-                        { color: 'red', count: 2, uid: 'b10' },
-                        { color: 'blue', count: 2, uid: 'b12' }
+                        { color: 'red', count: 12, uid: 'b1' },
+                        { color: 'blue', count: 3, uid: 'b2' }
                     ],
                     [
-                        { color: 'green', count: 2, uid: 'b11' },
-                        { color: 'yellow', count: 2, uid: 'b13' }
-                    ],
-                    [
-                        { color: 'black', count: 2, uid: 'b14' },
-                        { color: 'red', count: 2, uid: 'b18' }
+                        { color: 'yellow', count: 11, uid: 'b3' },
+                        { color: 'black', count: 6, uid: 'b4' }
                     ]
                 ]
             }
@@ -650,9 +759,13 @@
             const svg = document.getElementById('trails-svg-container');
             svg.innerHTML = '';
             
-            for (const [color, path] of Object.entries(level.paths)) {
-                const config = CLASS_CONFIGS[color];
-                if (!config) continue;
+            activeSlots.forEach((slot, i) => {
+                if (!slot) return;
+                const path = slot.calculatedPath || findShortestPath(1 + i * 2, 15, slot.color);
+                if (!path) return;
+
+                const config = CLASS_CONFIGS[slot.color];
+                if (!config) return;
 
                 // Create stroke path
                 let pathD = "";
@@ -681,26 +794,21 @@
                 // Sharp center line
                 const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 line.setAttribute("d", pathD);
-                line.setAttribute("stroke", config.colorCode);
+                line.setAttribute("stroke", "#ffffff");
                 line.setAttribute("stroke-width", "2");
-                line.setAttribute("stroke-dasharray", "4,4");
                 line.setAttribute("stroke-linecap", "round");
                 line.setAttribute("stroke-linejoin", "round");
                 line.setAttribute("fill", "none");
+                line.setAttribute("opacity", "0.8");
                 svg.appendChild(line);
-            }
+            });
         }
 
-        // Draw static board elements: Portals, Trolls
         function drawStaticEntities(level) {
             const layer = document.getElementById('entities-layer');
 
-            // Draw portals at the bottom mapping to the Slots
+            // Draw Portals (5 static gray sockets)
             for (let i = 0; i < 5; i++) {
-                const color = getColorForSlot(i, level);
-                if (!color) continue;
-                const config = CLASS_CONFIGS[color];
-
                 const pX = (1 + i * 2);
                 const pY = 15;
 
@@ -710,23 +818,23 @@
                 portalDiv.style.height = `${CELL_SIZE}px`;
                 portalDiv.style.left = `${pX * CELL_SIZE}px`;
                 portalDiv.style.top = `${pY * CELL_SIZE}px`;
-                portalDiv.style.background = `radial-gradient(circle, ${config.colorCode}40 0%, transparent 80%)`;
-                portalDiv.style.border = `2px solid ${config.colorCode}70`;
-                portalDiv.innerHTML = `<span class="text-xs">🌀</span>`;
-                portalDiv.id = `portal-${color}`;
+                portalDiv.style.background = `radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 80%)`;
+                portalDiv.style.border = `2px dashed rgba(255, 255, 255, 0.15)`;
+                portalDiv.id = `portal-${i}`;
+                portalDiv.innerHTML = `<span class="text-[9px] text-gray-600 font-bold">${i+1}</span>`;
                 layer.appendChild(portalDiv);
             }
 
-            // Draw Enemy Camps (stacks of trolls/demons)
+            // Draw Enemy Camps (individual 1x1 pixels)
             level.enemyCamps.forEach(camp => {
                 const config = CLASS_CONFIGS[camp.color];
                 const campDiv = document.createElement('div');
                 campDiv.id = `camp-${camp.id}`;
-                campDiv.className = "absolute flex flex-col items-center justify-end z-20";
+                campDiv.className = "absolute flex items-center justify-center z-20";
                 campDiv.style.width = `${CELL_SIZE}px`;
-                campDiv.style.height = `${CELL_SIZE * 2}px`;
+                campDiv.style.height = `${CELL_SIZE}px`;
                 campDiv.style.left = `${camp.x * CELL_SIZE}px`;
-                campDiv.style.top = `${(camp.y - 1) * CELL_SIZE}px`;
+                campDiv.style.top = `${camp.y * CELL_SIZE}px`;
 
                 // Stack rendering
                 updateCampStackVisual(campDiv, camp);
@@ -734,24 +842,15 @@
             });
         }
 
-        // Helper to find slot index for a color
-        function getColorForSlot(slotIndex, level) {
-            const targetX = 1 + slotIndex * 2;
-            for (const [color, path] of Object.entries(level.paths)) {
-                if (path[0].x === targetX && path[0].y === 15) {
-                    return color;
-                }
-            }
-            return null;
-        }
+
 
         // Render stacked character blocks for camp
         function updateCampStackVisual(container, camp) {
             container.innerHTML = '';
             const config = CLASS_CONFIGS[camp.color];
             
-            // Counter Badge
-            if (camp.count > 0) {
+            // Counter Badge (only if maxCount > 1)
+            if (camp.count > 0 && camp.maxCount > 1) {
                 const badge = document.createElement('span');
                 badge.className = "bg-black/80 text-[9px] px-1 rounded-full text-white font-bold border border-white/20 mb-1 scale-90";
                 badge.textContent = `${camp.count}/${camp.maxCount}`;
@@ -761,18 +860,23 @@
             // Visual stacked characters
             for (let i = 0; i < camp.count; i++) {
                 const charEl = document.createElement('div');
-                charEl.className = "w-7 h-7 flex items-center justify-center text-base rounded shadow-md transition-all duration-300 transform";
+                charEl.className = "w-8 h-8 flex items-center justify-center text-base rounded shadow-md transition-all duration-300 transform";
                 charEl.style.backgroundColor = config.colorCode + "90";
                 charEl.style.border = `1.5px solid ${config.colorCode}`;
-                charEl.style.marginBottom = "-12px";
-                charEl.style.zIndex = 10 + i;
+                if (camp.maxCount > 1) {
+                    charEl.style.marginBottom = "-12px";
+                    charEl.style.zIndex = 10 + i;
+                } else {
+                    // Soft neon drop shadow for clean pixel styling
+                    charEl.style.boxShadow = `0 0 10px ${config.colorCode}90, inset 0 0 4px rgba(255, 255, 255, 0.3)`;
+                }
                 charEl.innerHTML = config.enemyIcon;
                 container.appendChild(charEl);
             }
 
-            // If empty, draw ruins
+            // If empty, draw sparkles
             if (camp.count <= 0) {
-                container.innerHTML = `<span class="text-xs text-gray-600">🪨</span>`;
+                container.innerHTML = `<span class="text-xs text-indigo-400/30">✨</span>`;
             }
         }
 
@@ -909,43 +1013,96 @@
             evaluatePathStates();
         }
 
+        // Dynamic BFS Shortest Pathfinder (Obstacles = Princess Cage + other active enemies)
+        function findShortestPath(startPortalX, startPortalY, targetColor) {
+            // BFS queue holds: { x, y, path: [ {x, y} ] }
+            let queue = [{ x: startPortalX, y: startPortalY, path: [{ x: startPortalX, y: startPortalY }] }];
+            let visited = new Set();
+            visited.add(`${startPortalX},${startPortalY}`);
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                
+                // Expand neighbors in 4 orthogonal directions
+                const dirs = [
+                    { dx: 0, dy: -1 }, // Up
+                    { dx: 0, dy: 1 },  // Down
+                    { dx: -1, dy: 0 }, // Left
+                    { dx: 1, dy: 0 }   // Right
+                ];
+
+                for (const dir of dirs) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    const key = `${nx},${ny}`;
+
+                    // Board bounds check
+                    if (nx < 0 || nx >= 10 || ny < 0 || ny >= 17) continue;
+                    if (visited.has(key)) continue;
+
+                    // Obstacle: Princess Cage (covers cells x:4..5, y:4..5)
+                    if (nx >= 4 && nx <= 5 && ny >= 4 && ny <= 5) continue;
+
+                    // Obstacle: Living Enemy check
+                    const enemy = levelState.enemyCamps.find(c => c.x === nx && c.y === ny && c.count > 0);
+                    if (enemy) {
+                        // If it matches our target color, we found the shortest path to an exposed target!
+                        if (enemy.color === targetColor) {
+                            return current.path.concat({ x: nx, y: ny });
+                        }
+                        // If it's a different color, it acts as a solid obstacle we cannot cross!
+                        continue;
+                    }
+
+                    // Empty cell is walkable!
+                    visited.add(key);
+                    queue.push({
+                        x: nx,
+                        y: ny,
+                        path: current.path.concat({ x: nx, y: ny })
+                    });
+                }
+            }
+            return null; // No path found (blocked)
+        }
+
         // Evaluate topological pathing states and set BLOCKED badges
         function evaluatePathStates() {
-            // 1. Determine active paths based on color
-            let activeColors = [];
-            activeSlots.forEach(slot => {
-                if (slot) activeColors.push(slot.color);
-            });
-
-            // 2. Evaluate intersections & blockage for each active slot
             for (let i = 0; i < 5; i++) {
                 const slot = activeSlots[i];
-                if (!slot) continue;
+                const portalDiv = document.getElementById(`portal-${i}`);
+
+                if (!slot) {
+                    // Reset portal to empty/inactive state
+                    if (portalDiv) {
+                        portalDiv.style.background = `radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 80%)`;
+                        portalDiv.style.border = `2px dashed rgba(255, 255, 255, 0.15)`;
+                        portalDiv.innerHTML = `<span class="text-[9px] text-gray-600 font-bold">${i+1}</span>`;
+                    }
+                    continue;
+                }
 
                 const color = slot.color;
-                const path = levelState.paths[color];
-                if (!path) continue;
+                const portalX = 1 + i * 2;
+                const portalY = 15;
+                const config = CLASS_CONFIGS[color];
+
+                // Update portal to glowing vortex of slot color
+                if (portalDiv && config) {
+                    portalDiv.style.background = `radial-gradient(circle, ${config.colorCode}40 0%, transparent 80%)`;
+                    portalDiv.style.border = `2px solid ${config.colorCode}70`;
+                    portalDiv.innerHTML = `<span class="text-xs">🌀</span>`;
+                }
+
+                // Dynamically find the shortest path from this portal to an enemy of this color
+                const shortestPath = findShortestPath(portalX, portalY, color);
 
                 let isBlocked = false;
-
-                // Loop other active slots
-                for (let j = 0; j < 5; j++) {
-                    if (i === j) continue; // skip self
-                    const otherSlot = activeSlots[j];
-                    if (!otherSlot) continue;
-
-                    const otherColor = otherSlot.color;
-                    const otherPath = levelState.paths[otherColor];
-                    if (!otherPath) continue;
-
-                    // If they overlap, and the other is ALREADY marching (or has smaller slot index)
-                    if (pathsIntersect(path, otherPath)) {
-                        const hasMarchingHeroes = activeHeroes.some(h => h.color === otherColor);
-                        if (hasMarchingHeroes || j < i) {
-                            isBlocked = true;
-                            break;
-                        }
-                    }
+                if (!shortestPath) {
+                    isBlocked = true;
+                } else {
+                    // Store the calculated path on the slot so heroes can follow it
+                    slot.calculatedPath = shortestPath;
                 }
 
                 // Update UI state
@@ -953,7 +1110,7 @@
                 if (badgeEl) {
                     if (isBlocked) {
                         badgeEl.classList.remove('hidden');
-                        logDev(`Slot ${i} [${color}] is BLOCKED by intersecting active paths.`);
+                        logDev(`Slot ${i} [${color}] is BLOCKED (no path to enemies).`);
                     } else {
                         badgeEl.classList.add('hidden');
                     }
@@ -964,6 +1121,9 @@
                     spawnHero(slot);
                 }
             }
+
+            // Redraw Paths in SVG
+            drawSVGPaths(levelState);
 
             // Check Fail state
             checkFailState();
@@ -1015,7 +1175,8 @@
         // Spawn a hero
         function spawnHero(slot) {
             const color = slot.color;
-            const path = levelState.paths[color];
+            const path = slot.calculatedPath || findShortestPath(1 + slot.slotIndex * 2, 15, color);
+            if (!path) return;
             const config = CLASS_CONFIGS[color];
 
             slot.spawnedCount++; // track active spawned
@@ -1080,10 +1241,17 @@
                         hero.pixelX = hero.x * CELL_SIZE;
                         hero.pixelY = hero.y * CELL_SIZE;
                         updateHeroDOMPosition(hero);
+
+                        // Check if there is a living enemy of this color at the current position!
+                        const targetEnemy = levelState.enemyCamps.find(c => c.color === hero.color && c.x === hero.x && c.y === hero.y && c.count > 0);
+                        if (targetEnemy) {
+                            hero.state = 'battle';
+                            hero.battleTimer = 6; // ~1 second clashing combat pause
+                            hero.matchedEnemy = targetEnemy; // store reference to the specific enemy
+                            logDev(`[BATTLE] ${config.heroName} engaged battle with enemy at (${hero.x}, ${hero.y})`);
+                        }
                     } else {
-                        hero.state = 'battle';
-                        hero.battleTimer = 6; // ~1 second clashing combat pause
-                        logDev(`[BATTLE] ${config.heroName} engaged battle at enemy camp`);
+                        hero.state = 'marching_down';
                     }
                 } 
                 else if (hero.state === 'battle') {
@@ -1097,12 +1265,12 @@
                     if (hero.battleTimer <= 0) {
                         hero.domEl.style.filter = "none";
                         
-                        const enemyCamp = levelState.enemyCamps.find(c => c.color === hero.color);
-                        if (enemyCamp && enemyCamp.count > 0) {
-                            enemyCamp.count--;
+                        const enemy = hero.matchedEnemy || levelState.enemyCamps.find(c => c.color === hero.color && c.count > 0);
+                        if (enemy && enemy.count > 0) {
+                            enemy.count--;
                             
-                            const campDiv = document.getElementById(`camp-${enemyCamp.id}`);
-                            if (campDiv) updateCampStackVisual(campDiv, enemyCamp);
+                            const campDiv = document.getElementById(`camp-${enemy.id}`);
+                            if (campDiv) updateCampStackVisual(campDiv, enemy);
 
                             spawnCoin(hero);
 
@@ -1110,7 +1278,7 @@
                             updatePrincessLock();
 
                             hero.state = 'marching_down';
-                            logDev(`[LOOT] Enemy defeated! Gold coin spawned.`);
+                            logDev(`[LOOT] Enemy defeated at (${enemy.x}, ${enemy.y})! Gold coin spawned.`);
                         } else {
                             hero.state = 'marching_down';
                         }

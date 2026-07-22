@@ -1,5 +1,5 @@
 # Game Design Document: "Not a RPG"
-## Version 1.2.0 (Solitaire Columns & Hidden Paths Update)
+## Version 1.4.0 (Dynamic BFS Peeling Grid & Interactive Level Layouts Update)
 **Author:** Desi (Expert Casual Mobile Game Designer)  
 **Platform:** Mobile (Portrait 9:16)  
 **Genre:** Color-Sorting Puzzle / Casual Hero Battler  
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Executive Summary & Concept
-"Not a RPG" is a tactical puzzle game where players manage a cute squad of fantasy heroes divided into color-coded **Troop Boxes**. Players must strategically tap these boxes to send heroes marching along predefined, intersecting trails on a grid-based board to defeat matching enemy camps, collect gold coins, and rescue a captured Princess locked in the center of the level.
+"Not a RPG" is a tactical puzzle game where players manage a cute squad of fantasy heroes divided into color-coded **Troop Boxes**. Players must strategically tap these boxes to send heroes marching along predefined, intersecting trails on a grid-based board to defeat matching enemy pixels (where each enemy occupies exactly one grid cell), collect gold coins, and rescue a captured Princess locked in the center of the level.
 
 The puzzle has two core layers of strategy:
 1.  **Vertical Solitaire Columns (The Sorting Puzzle):** Troop boxes sit in vertical stacks at the bottom. Only the first (exposed) box of each column is active and tapable. Tapping it exposes the box behind it, creating a deep chronological planning layer reminiscent of Solitaire or Mahjong.
@@ -51,7 +51,7 @@ The game screen is optimized for a **390px x 844px portrait viewport** with a fl
 ### Gameplay Canvas (390px x 663px)
 *   Centered, floating layout. Background is a rich deep blue fantasy horizon.
 *   **Princess Cage:** Prominent center graphic, locked with an animated padlock displaying a countdown lock.
-*   **Enemy Camps:** Fixed tiles on the board where stacks of enemies reside. Each camp displays the number of active enemies remaining (e.g., Red Troll Archer x3).
+*   **Enemy Pixels:** Fixed tiles on the board where individual enemies reside (one enemy per grid cell). Cleared cells display a soft magical sparkle effect (✨) or ruins, and remaining active enemies pulse gently with their respective base color glows.
 *   **Portals / Trails:** Sockets at the bottom of the board where trails start. Trails are **hidden from view**, creating a surprise pathing dynamic as heroes begin marching.
 
 ### Active Slots Tray (90px)
@@ -85,11 +85,12 @@ The game screen is optimized for a **390px x 844px portrait viewport** with a fl
 Once a Troop Box is settled in an Active Slot:
 1.  **Spawning Check:** The game checks if the trail starting from this slot to the corresponding Enemy Camp on the board is **clear and unblocked**.
 2.  **Hero Spawning:** If the path is unblocked, a hero of that box's color emerges from the box in the Active Slot.
-3.  **March Up:** The hero walks **up** the predefined (hidden) trail to the matching Enemy Camp on the board.
-4.  **Battle Pause:** Upon reaching the camp, the hero engages in a **1-second battle animation** with one enemy.
-5.  **Loot Spawning:** The enemy is defeated, turning into a **Yellow Gold Coin**.
-6.  **March Down:** The hero grabs the coin and walks **down** the trail, dragging it back to the active slot.
+3.  **March Up:** The hero walks **up** the predefined (hidden) trail cell-by-cell.
+4.  **Step-by-Step Enemy Search ("Pac-Man" Clearing):** At each cell along the path, the marching hero checks if there is a living enemy of their matching color on that specific grid cell.
+5.  **Battle Pause:** Upon stepping onto a cell with a matching enemy, the hero stops marching, engages in a **1-second battle animation** to defeat it, turning the enemy into a **Yellow Gold Coin**.
+6.  **March Down:** The hero grabs the coin and immediately walks **down** (backwards along the path from their current position) to the active slot.
 7.  **Sinking:** Once the hero enters the active slot with the coin, the coin is deposited, the box counter decrements, and the next hero is spawned (if any remain).
+8.  **Sequence Clearing:** The next hero will march up, pass through the already-cleared cells (now showing ✨), and walk further up the path until they encounter the next active enemy.
 8.  **Clearing:** When the box counter reaches 0, the empty box vanishes from the Active Slot, freeing up that slot for another box from the columns below.
 
 ### The Princess Objective & Win State
@@ -100,16 +101,15 @@ Once a Troop Box is settled in an Active Slot:
 
 ## 4. Puzzle Pathing & Blocking Logic (The Fail State)
 
-To keep the game highly strategic, "Not a RPG" uses **Topological Path Blocking** rather than timing-based physics:
+To keep the game highly strategic, "Not a RPG" uses **Dynamic BFS Pathfinding & Peeling Obstacles**:
 
-1.  **Active Paths:** A trail is active if its corresponding Active Slot holds a troop box.
-2.  **Intersection Rule:** If Trail A and Trail B intersect on the grid, they are **mutual blockers**. 
-3.  **Blocking Behavior:**
-    *   If a box of color X is placed in an Active Slot, and its path intersects with an *already active* trail, the path is blocked.
-    *   Heroes **will not emerge** from the blocked box. It sits in the Active Slot idle, displaying a red "BLOCKED" indicator.
+1.  **Enemies as Obstacles:** Living enemies of any color act as solid obstacles (walls). They block lines-of-sight and physical pathways.
+2.  **Dynamic BFS Shortest Path:** Whenever a troop box of color X is placed in slot `i`, the game dynamically calculates the shortest path from portal `i` (at coordinates `(1 + i * 2, 15)`) to any reachable living enemy of color X.
+3.  **The Peeling Puzzle Rule:** Heroes can only attack "exposed" enemies. An enemy is exposed if there is a clear, contiguous pathway of empty grid cells leading from the portal to that enemy. 
+    *   *Surrounded Core:* If a green enemy core is completely surrounded by red enemies, the green path is **BLOCKED**. Players must first spawn red heroes to clear the outer red shell. As outer cells are cleared and become empty spaces (✨), pathways are created, exposing and unlocking the inner green core!
 4.  **The Stalemate Fail State:**
-    *   If all **5 Active Slots** are filled with boxes, and some of those boxes are blocked by other active trails (or circular pathing dependencies exist), the game reaches a stalemate where no heroes can walk.
-    *   Since the slots are full, the player cannot tap any more boxes from the columns below.
+    *   If all **5 Active Slots** are filled with boxes, and all 5 colors have no reachable active path to any of their matching living enemies (e.g. they are completely trapped behind other colors), the game reaches a stalemate.
+    *   Since the active slots are full and no heroes are active, the player cannot tap any more boxes from the supply columns below.
     *   A **"No Path to Enemies" Fail Screen** is triggered (blue card backdrop, split 3D heart, red "1x Claim" or green "Continue" CTA).
 
 ---
@@ -127,23 +127,58 @@ The puzzle's difficulty and strategy are entirely determined by the level layout
 
 Below is the list of levels built into the game's prototype database, designed to showcase different aspects of color-sorting, stack-clearing, and path-blocking strategies:
 
+### 5.1 Handcrafted Levels Database
+
+Below is the list of levels built into the game's prototype database, designed to showcase different aspects of color-sorting, peeling puzzles, and dynamic path-blocking strategies:
+
 #### Level 1: Smiley Face Siege (The Epic Sorting Battle)
-*   **Concept:** A massive level where enemies are visually arranged into a classic smiley face layout (Eyes + Smile) using Red and Green monster groups.
-*   **Enemies & Camps (120 Total):**
-    *   **Left Eye (`red_1`):** Located at `x: 2, y: 3` with **30** Red Troll Archers.
-    *   **Right Eye (`red_2`):** Located at `x: 7, y: 3` with **30** Red Troll Archers.
-    *   **The Smile (`green_1` to `green_6`):** Six green camps of **10** Green Trolls each forming a symmetrical curve spanning `y: 7` to `y: 9` (from `x: 2` to `x: 7`).
-*   **The Hero Deck (120 Total):**
+*   **Concept:** A massive level where enemies are visually arranged into a classic smiley face layout (Eyes + Smile) using Red and Green monster groups, represented as single pixel units.
+*   **Enemies & Pixels (18 Total):**
+    *   **Left Eye (`red_1`):** A 2x2 square cluster of 4 Red Troll Archers at coordinates: `(2,2)`, `(3,2)`, `(2,3)`, `(3,3)`.
+    *   **Right Eye (`red_2`):** A 2x2 square cluster of 4 Red Troll Archers at coordinates: `(6,2)`, `(7,2)`, `(6,3)`, `(7,3)`.
+    *   **The Smile (`green_1` to `green_6`):** Six green pixels of 1 Green Troll each forming a symmetrical curve spanning `y: 7` to `y: 9` (from `x: 2` to `x: 7`).
+*   **The Hero Deck (18 Total):**
     *   Stacked inside **2 Columns** of **4 Boxes each**:
-        *   **Column 1:** `green_1` (10), `green_2` (10), `green_3` (10), locked behind `red_1` (30).
-        *   **Column 2:** `green_4` (10), `green_5` (10), `green_6` (10), locked behind `red_2` (30).
-*   **The Strategy:** Players must first systematically deploy the green archer camps forming the smiley face. This will reveal the Red Warrior boxes sitting at the top of the columns. If players attempt to mix and match active lanes too aggressively, their paths will intersect and block at row `y = 10`, triggering the "No Path to Enemies" Fail State!
+        *   **Column 1:** `green_1` (1), `green_2` (1), `green_3` (1), locked behind `red_1` (4).
+        *   **Column 2:** `green_4` (1), `green_5` (1), `green_6` (1), locked behind `red_2` (4).
 
-#### Level 2: Crossings Core
-*   **Concept:** A compact, two-color puzzle introducing Solitaire stacking dependencies (Green hidden under Red in a single column).
-... (existing levels are stored in code, but here we document the core showcase level).
+#### Level 2: Crossings Core (The Peeling Heart Shape)
+*   **Concept:** A gorgeous Red Heart with a hidden Green Core. The Green core is completely surrounded by Red pixel-art, making Green pathfinding initially BLOCKED. Players must peel the outer Red Heart to expose the inner Green core!
+*   **Enemies & Pixels (32 Total):**
+    *   **Outer Red Heart (16 Red Pixels):** Arranged in a beautiful outline centered around columns 4 and 5, spanning row 3 to 8.
+    *   **Inner Green Core (16 Green Pixels):** Arranged as the solid inner heart core.
+*   **The Hero Deck (32 Total):**
+    *   **Column 1:** 16 Green Archers locked behind 16 Red Warriors. Players must deploy the warriors to strip away the outer shield before the archers can reach the exposed heart core!
 
----
+#### Level 3: Triple Danger (The Majestic Royal Shield)
+*   **Concept:** A magnificent multi-layered shield composed of an outer Red Steel border, an inner Yellow Gold frame, and a central Blue Gem. 
+*   **Enemies & Pixels (36 Total):**
+    *   **Outer Red Border (20 Red Pixels):** Forming the grand outer contour of the shield.
+    *   **Gold Frame (12 Yellow Pixels):** Symmetrical golden frame lining the interior of the red border.
+    *   **Blue Gem (4 Blue Pixels):** Centered blue gem at the heart of the shield `(4,5)`, `(5,5)`, `(4,6)`, `(5,6)`.
+*   **The Hero Deck (36 Total):**
+    *   **Column 1:** Blue Box (4) stacked under Yellow Box (12) stacked under Red Box (20). A clean, sequential 3-tiered peeling challenge!
+
+#### Level 4: Shadow Matrix (The Balance of Yin-Yang)
+*   **Concept:** A beautiful circular Yin-Yang symbol divided into a Yellow light side and a Black dark side.
+*   **Enemies & Pixels (30 Total):**
+    *   **Yellow Light Side (15 Yellow Pixels):** Symmetrical right-aligned split circle.
+    *   **Black Dark Side (15 Black Pixels):** Symmetrical left-aligned split circle.
+*   **The Hero Deck (30 Total):**
+    *   **Column 1:** Yellow (15) locked behind Black (15).
+    *   **Column 2:** Black (15) locked behind Yellow (15).
+    *   Creates a circular dependency where players must strategically clear sections of both sides to avoid hitting a stalemate.
+
+#### Level 5: Ultimate Raid (The Royal Crown)
+*   **Concept:** A grand final level drawing a majestic pixel-art Crown using Red velvet, Yellow gold, Blue sapphires, and a Black velvet base.
+*   **Enemies & Pixels (32 Total):**
+    *   **Velvet (12 Red Pixels):** Core interior velvet.
+    *   **Gold Frame (11 Yellow Pixels):** Elegant spiked contour.
+    *   **Sapphire Gems (3 Blue Pixels):** Spire gems.
+    *   **Shadow Base (6 Black Pixels):** The base cushion.
+*   **The Hero Deck (32 Total):**
+    *   **Column 1:** Blue (3) locked behind Red (12).
+    *   **Column 2:** Black (6) locked behind Yellow (11).
 
 ## 6. Developer & QA Cheat Overlay
 
